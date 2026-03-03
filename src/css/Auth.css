@@ -1,0 +1,82 @@
+/* PAGE */
+.auth-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e293b, #475569);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CARD */
+.auth-card {
+  width: 420px;
+  height: 520px;
+  background: #7c8696;
+  border-radius: 24px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* LOGO */
+.auth-logo {
+  height: 55px;
+  margin-bottom: 40px;
+}
+
+/* TITLE */
+.auth-title {
+  text-align: center;
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* BUTTONS */
+.auth-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  align-items: center;
+}
+
+/* COMMON BUTTON */
+.auth-btn {
+  width: 260px;
+  height: 46px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+
+}
+
+/* LOGIN */
+.auth-btn.login {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.auth-btn.login:hover {
+  background: #1e4fd8;
+}
+
+/* SIGNUP */
+.auth-btn.signup {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+}
+
+.auth-btn.signup:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

@@ -1,0 +1,328 @@
+/* =========================
+   STEP PROGRESS BAR
+========================= */
+
+.Signup-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 50px;
+  position: relative;
+}
+
+/* horizontal line */
+.Signup-steps::before {
+  content: "";
+  position: absolute;
+  top: 25px;
+  left: 8%;
+  width: 84%;
+  height: 2px;
+  background: #334155;
+  z-index: 0;
+}
+
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #111827;
+  border: 2px solid #334155;
+  color: #7D8390;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+/* ACTIVE STEP */
+.step.active .circle {
+  background: #3B82F6;
+  border-color: #3B82F6;
+  color: white;
+}
+
+.step p {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #7D8390;
+  transition: color 0.3s ease;
+}
+
+.step.active p {
+  color: #3B82F6;
+}
+
+
+/* ===== HEADER ===== */
+.Signup-header {
+  background: #1F2937;
+  color:#7D8390;
+  width: 100%; 
+}
+/* Flex container */
+.Signup-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+   border-bottom: 1px solid #7D8390;
+}
+
+
+.Signup-right a {
+  color: #3B82F6;  /* bright blue */
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.Signup-right a:hover {
+  color: #2563eb; /* darker blue on hover */
+}
+
+/* Remove extra gap */
+.Signup-page {
+  padding: 20px 10px;   /* not 120px */
+}
+
+/* LOGO */
+
+.Signuplogo-img {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1); /* Invert colors to white */
+}
+/* =========================
+   SIGNUP PAGE (FIXED)
+========================= */
+
+.Signup-page {
+  min-height: 100vh;
+  background: #111827;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;   /* FIXED */
+  font-family: "Inter", sans-serif;
+ 
+}
+
+/* ===== Card ===== */
+.Signup-card {
+  width: 100%;
+  max-width: 1000px;
+  background: #1F2937;
+  padding: 70px;
+  border-radius: 10px;
+  
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+  color: #f1f5f9;
+   margin-top: 20px;
+}
+
+/* ===== Titles ===== */
+.Signup-card h2 {
+  font-size: 26px;
+  margin-bottom: 5px;
+}
+
+.Signup-card h3 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #e2e8f0;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 30px;
+}
+
+/* ===== Grid Layout ===== */
+.Signupform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+  
+}
+
+.Signupform-group {
+  display: flex;
+  flex-direction: column;
+ 
+}
+
+.Signupform-group.full {
+  grid-column: 1 / -1;
+  margin-bottom: 20px;
+}
+
+/* ===== Labels ===== */
+.Signupform-group label {
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #FFFFFF;
+}
+
+/* ===== Inputs ===== */
+.Signupform-group input,
+.Signupform-group select,
+.Signupform-group textarea {
+  background: #111827;
+  border: 1px solid #334155;
+  padding: 12px;
+  border-radius: 8px;
+  color: #7D8390;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.Signupform-group textarea {
+  min-height: 100px;
+  resize: none;
+}
+
+/* ===== Focus Effect ===== */
+.Signupform-group input:focus,
+.Signupform-group select:focus,
+.Signupform-group textarea:focus {
+  outline: none;
+  border-color: #7D8390;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+}
+
+/* ===== Contact Row ===== */
+.contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.Signupphone-wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.Signupphone-wrapper select {
+  width: 90px;
+}
+
+.Signupphone-wrapper input {
+  flex: 1;
+}
+
+/* ===== Upload Section ===== */
+.Signupupload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.Signupupload-box {
+  border: 2px dashed #334155;
+  padding: 30px;
+  text-align: center;
+  border-radius: 10px;
+  background: #0b1220;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Signupupload-box:hover {
+  border-color: #2563eb;
+  background: #0f172a;
+}
+
+.Signupupload-box p {
+  margin: 0;
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+.Signupupload-box span {
+  font-size: 12px;
+  color: #94a3b8;
+}
+/* ===== Upload secondIcon Circle ===== */
+.Signup-upload-icon {
+  width: 55px;
+  height: 55px;
+  background: #dcfce7;          /* soft green background */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px auto;
+  color: #16a34a;               /* green icon */
+  transition: all 0.3s ease;
+}
+
+/* Hover animation */
+.Signupupload-box:hover .upload-icon {
+  transform: scale(1.1);
+  background: #bbf7d0;
+}
+.Signup-upload1-icon {
+  width: 55px;
+  height: 55px;
+  background: #B3D0ED;          /* soft green background */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px auto;
+  color: #137FEC;               /* green icon */
+  transition: all 0.3s ease;
+}
+
+/* Hover animation */
+.Signupupload1-box:hover .upload-icon {
+  transform: scale(1.1);
+  background: #bbf7d0;
+}
+/* ===== Submit Button ===== */
+.Signupsubmit-btn {
+  width: 30%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #3B82F6;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 590px;
+}
+
+.Signupsubmit-btn:hover {
+  background: #2563eb;
+}
+
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .Signupform-grid,
+  .Signupupload-grid,
+  .contact-row {
+    grid-template-columns: 1fr;
+  }
+
+  .Signup-card {
+    padding: 25px;
+  }
+}

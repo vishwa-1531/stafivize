@@ -1,0 +1,162 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: #1e293b;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: white;
+}
+/* Logout NavLink */
+.logout-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #f87171; /* soft red */
+  transition: 0.3s ease;
+}
+
+/* Hover */
+.logout-item:hover {
+  background-color:#334155 ;
+;
+  color: #ffffff;
+}
+
+/* Active (if login route active) */
+.logout-item.active {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-weight: 600
+}
+
+
+/* Logo */
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* fixed px error */
+  font-size: 20px;
+  margin-bottom: 40px;
+}
+
+.logo-icon {
+  font-size: 22px;
+  color: #3b82f6;
+  width: 200%;
+}
+
+.logo-text {
+  letter-spacing: 1px;
+}
+
+/* Menu */
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 200px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #94a3b8;
+  transition: 0.3s ease;
+}
+
+.nav-item:hover {
+  background: #334155;
+  color: white;
+}
+
+.nav-item.active {
+  background: #2563eb;
+  color: white;
+}
+
+.menu-icon {
+  font-size: 16px;
+}
+.nav-item.active {
+  background-color: #2563eb;   /* Blue Highlight */
+  color: white;
+  font-weight: 600;
+}
+
+.nav-item.active .menu-icon {
+  color: white;
+}
+/* Profile Section */
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #334155;
+  padding: 12px;
+  border-radius: 12px;
+}
+.sidebar-profile label {
+  display: flex;
+  align-items: center;
+}
+
+/* Uploaded Image */
+.profile-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  object-fit: cover;
+  border: 2px solid #3b82f6;
+   transition: all 0.3s ease;
+}
+
+.profile-img:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+/* Initials Avatar (WhatsApp Style) */
+.profile-initials {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.profile-initials:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.sidebar-profile h4 {
+  font-size: 14px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.sidebar-profile p {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
