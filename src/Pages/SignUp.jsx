@@ -120,28 +120,39 @@ console.log(documentFile, logoFile);
           <form onSubmit={handleContinue}>
             <div className="Signupform-grid">
               <div className="Signupform-group">
-                <label>Company Name</label>
+                <label>Company Name
+                   <span className="required">*</span>
+
+                </label>
                 <input
                    type="text"
                    placeholder="Enter your company name"
                  value={companyName}
                  onChange={(e) => setCompanyName(e.target.value)}
+                 required
               />
               </div>
 
               <div className="Signupform-group">
-                <label>Company Website</label>
+                <label>Company Website
+                   <span className="required">*</span>
+
+                </label>
                 <input
                 type="text"
                 placeholder="https://yourcompany.com"
                 value={companyWebsite}
                 onChange={(e) => setCompanyWebsite(e.target.value)}
+                required
                />
               </div>
 
               <div className="Signupform-group">
-                <label>Industry</label>
-               <select
+                <label>Industry
+                   <span className="required">*</span>
+
+                </label>
+               <select required
                value={industry}
                onChange={(e) => setIndustry(e.target.value)}
                >
@@ -154,8 +165,11 @@ console.log(documentFile, logoFile);
               </div>
 
               <div className="Signupform-group">
-                <label>Company Size</label>
-                <select
+                <label>Company Size
+                   <span className="required">*</span>
+
+                </label>
+                <select required
                  value={companySize}
                   onChange={(e) => setCompanySize(e.target.value)}
                 >
@@ -173,43 +187,77 @@ console.log(documentFile, logoFile);
             </div>
             
             <div className="Signupform-group full">
-              <label>Business Description</label>
+              <label>Business Description
+                  <span className="required">*</span>
+
+              </label>
               <textarea placeholder="Tell us about your company, its mission, and the services you provide..." />
             </div>
 
             <div className="Signupform-grid">
               <div className="Signupform-group">
-                <label>Tax ID / Business Registration Number</label>
-                <input type="text" placeholder="e.g., 12-3456789" />
+                <label>Tax ID / Business Registration Number 
+                  <span className="required">*</span>
+               </label>
+                <input type="text" placeholder="e.g., 12-3456789"
+                required
+                 />
+                
               </div>
 
               <div className="Signupform-group">
-                <label>Year Established</label>
-                <input type="text" placeholder="e.g., 2026" />
+                <label>Year Established
+                   <span className="required">*</span>
+
+                </label>
+                <input type="text" placeholder="e.g., 2026"
+                required
+                />
               </div>
             </div>
 
             <h3>Company Address</h3>
 
             <div className="Signupform-group full">
-              <label>Street Address</label>
-              <input type="text" placeholder="Radhanpurroad " />
+              <label>Street Address
+                 <span className="required">*</span>
+
+              </label>
+              <input type="text" placeholder="Radhanpurroad "
+              required
+              />
             </div>
 
             <div className="Signupform-grid">
               <div className="Signupform-group">
-                <label>City</label>
-                <input type="text" placeholder="Mehsana" />
+                <label>City
+                   <span className="required">*</span>
+
+                </label>
+                <input type="text" placeholder="Mehsana"
+              required
+                 
+                />
               </div>
 
               <div className="Signupform-group">
-                <label>State / Province</label>
-                <input type="text" placeholder="Gujarat" />
+                <label>State / Province
+                   <span className="required">*</span>
+
+                </label>
+                <input type="text" placeholder="Gujarat"
+              required
+                
+                />
               </div>
 
               <div className="Signupform-group">
-                <label>Country</label>
-                <select>
+                <label>Country
+                   <span className="required">*</span>
+
+                </label>
+              
+                <select required  >
                   <option>Select a country</option>
                   <option>India</option>
                   <option>America</option>
@@ -220,8 +268,11 @@ console.log(documentFile, logoFile);
               </div>
 
               <div className="Signupform-group">
-                <label>Zip / Postal Code</label>
-                <input type="text" placeholder="384002" />
+                <label>Zip / Postal Code
+                   <span className="required">*</span>
+
+                </label>
+                <input type="text" placeholder="384002" required/>
               </div>
             </div>
 
@@ -229,22 +280,28 @@ console.log(documentFile, logoFile);
 
             <div className="contact-row">
               <div className="Signupform-group">
-                <label>Company Phone Number</label>
+                <label>Company Phone Number
+                   <span className="required">*</span>
+
+                </label>
                 <div className="Signupphone-wrapper">
-                  <select>
+                  <select >
                     <option>+91</option>
                     <option>+1</option>
                     <option>+255</option>
                     <option>+76</option>
                     <option>+40</option>
                   </select>
-                  <input type="text" placeholder="Enter phone number" />
+                  <input type="text" placeholder="Enter phone number" required/>
                 </div>
               </div>
 
               <div className="Signupform-group">
-                <label>Secondary Email</label>
-                <input type="email" placeholder="admin@company.com" />
+                <label>Secondary Email
+                   <span className="required">*</span>
+
+                </label>
+                <input type="email" placeholder="admin@company.com"required />
               </div>
             </div>
 
@@ -261,6 +318,7 @@ console.log(documentFile, logoFile);
                   style={{ display: "none" }}
                   accept=".pdf,.png,.jpg,.jpeg"
                   onChange={handleDocumentChange}
+                  required
                 />
 
                 {documentName ? (
@@ -286,6 +344,7 @@ console.log(documentFile, logoFile);
                   style={{ display: "none" }}
                   accept=".png,.svg"
                   onChange={handleLogoChange}
+                  required
                 />
 
                 {logoName ? (
