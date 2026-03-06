@@ -4,14 +4,12 @@ import logo from "../image/logo.png";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { FaArrowRight, FaCamera, FaUser } from "react-icons/fa";
 
-import { db } from "../firebase";
-import { collection, addDoc } from "firebase/firestore";
-
 const Admin = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-
+  const editData = location.state || {};
+  const companyData = location.state || {};
   const getStep = () => {
     if (location.pathname === "/SignUp") return 1;
     if (location.pathname === "/Admin") return 2;
@@ -23,15 +21,14 @@ const Admin = () => {
 
   const [profilePhoto, setProfilePhoto] = useState(null);
 
-  // 🔹 Form States
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState(editData.firstName || "");
+  const [lastName, setLastName] = useState(editData.lastName || "");
+  const [email, setEmail] = useState(editData.email || "");
   const [countryCode, setCountryCode] = useState("+1");
-  const [phone, setPhone] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
-  const [idType, setIdType] = useState("");
-  const [idNumber, setIdNumber] = useState("");
+  const [phone, setPhone] = useState(editData.phone || "");
+  const [jobTitle, setJobTitle] = useState(editData.jobTitle || "");
+  const [idType, setIdType] = useState(editData.idType || "");
+  const [idNumber, setIdNumber] = useState(editData.idNumber || "");
   const [terms, setTerms] = useState(false);
 
   const handlePhotoChange = (e) => {
@@ -46,8 +43,7 @@ const Admin = () => {
     navigate("/SignUp");
   };
 
-  // 🔹 Continue Button
-  const handleContinue = async (e) => {
+  const handleContinue = (e) => {
 
     e.preventDefault();
 
@@ -69,27 +65,30 @@ const Admin = () => {
       return;
     }
 
-    try {
+    const adminData = {
+      firstName,
+      lastName,
+      email,
+      phone: countryCode + " " + phone,
+      jobTitle,
+      idType,
+      idNumber
+    };
 
-      await addDoc(collection(db, "adminDetails"), {
-        firstName,
-        lastName,
-        email,
-        phone: countryCode + " " + phone,
-        jobTitle,
-        idType,
-        idNumber,
-        createdAt: new Date()
-      });
+   navigate("/Review", {
+  state: {
+    ...companyData,
 
-      alert("Admin details saved successfully");
+    firstName,
+    lastName,
+    email,
+    phone,
+    jobTitle,
+    idType,
+    idNumber
+  }
+});
 
-      navigate("/Review");
-
-    } catch (error) {
-      console.error("Error saving data:", error);
-      alert("Error saving data");
-    }
   };
 
   return (
@@ -102,6 +101,7 @@ const Admin = () => {
       <br/><br/>
 
       <div className="Signup-steps">
+
         <div className={`step ${currentStep >= 1 ? "active" : ""}`}>
           <div className="circle">1</div>
           <p>Company details</p>
@@ -116,6 +116,7 @@ const Admin = () => {
           <div className="circle">3</div>
           <p>Finish</p>
         </div>
+
       </div>
 
       <div className="Admin-page">
@@ -123,13 +124,9 @@ const Admin = () => {
         <div className="Admin-card">
 
           <h2>Admin Details</h2>
-          <p className="Adminsubtitle">
-            Provide your details to help us verify your account.
-          </p>
 
           <form onSubmit={handleContinue}>
 
-            {/* Profile Photo */}
             <div className="profile-photo-section">
 
               <div className="profile-photo-wrapper">
@@ -156,25 +153,18 @@ const Admin = () => {
                   accept="image/*"
                   onChange={handlePhotoChange}
                   hidden
-                  required
                 />
 
-              </div>
-
-              <div className="profile-photo-text">
-                <h3>Profile Photo</h3>
-                <p>Upload a professional photo. Recommended size: 400x400px</p>
               </div>
 
             </div>
 
             <div className="Adminform-grid">
 
-              {/* First Name */}
               <div className="Adminform-row">
 
                 <div className="Adminform-group">
-                  <label>First Name <span className="required">*</span></label>
+                  <label>First Name *</label>
                   <input
                     type="text"
                     placeholder="john"
@@ -185,7 +175,7 @@ const Admin = () => {
                 </div>
 
                 <div className="Adminform-group">
-                  <label>Last Name <span className="required">*</span></label>
+                  <label>Last Name *</label>
                   <input
                     type="text"
                     placeholder="Anderson"
@@ -197,29 +187,26 @@ const Admin = () => {
 
               </div>
 
-              {/* Email + Phone */}
               <div className="Adminform-row-email-phone">
 
                 <div className="Adminform-group">
-                  <label>Email Address <span className="required">*</span></label>
-                  <div className="input-with-icon">
-                    <input
-                      type="email"
-                      placeholder="john.anderson@company.com"
-                      value={email}
-                      onChange={(e)=>setEmail(e.target.value)}
-                      required
-                    />
-                    <span className="input-icon">@</span>
-                  </div>
+                  <label>Email Address *</label>
+                  <input
+                    type="email"
+                    placeholder="john.anderson@company.com"
+                    value={email}
+                    onChange={(e)=>setEmail(e.target.value)}
+                    required
+                  />
                 </div>
 
                 <div className="Adminform-group">
-                  <label>Phone Number <span className="required">*</span></label>
+
+                  <label>Phone Number *</label>
 
                   <div className="phone-input-group">
 
-                    <select required
+                    <select
                       value={countryCode}
                       onChange={(e)=>setCountryCode(e.target.value)}
                     >
@@ -229,15 +216,15 @@ const Admin = () => {
                     </select>
 
                     <input
-                     type="tel"
-                        placeholder="9876543210"
-                         value={phone}
-                         onChange={(e)=>setPhone(e.target.value)}
-                         required
-                         maxLength="10"
-                         pattern="[0-9]{10}"
-                         title="Please enter exactly 10 digits"
-                     />
+                      type="tel"
+                      placeholder="9876543210"
+                      value={phone}
+                      onChange={(e)=>setPhone(e.target.value)}
+                      required
+                      maxLength="10"
+                      pattern="[0-9]{10}"
+                      title="Please enter exactly 10 digits"
+                    />
 
                   </div>
 
@@ -245,89 +232,72 @@ const Admin = () => {
 
               </div>
 
-              {/* Job Title */}
-              <div className="Adminform-row-full">
+              <div className="Adminform-group">
+                <label>Job Title *</label>
+                <input
+                  type="text"
+                  placeholder="CEO"
+                  value={jobTitle}
+                  onChange={(e)=>setJobTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="Adminform-row">
 
                 <div className="Adminform-group">
-                  <label>Job Title <span className="required">*</span></label>
+                  <label>ID Type</label>
+                  <select
+                    value={idType}
+                    onChange={(e)=>setIdType(e.target.value)}
+                    required
+                  >
+                    <option value="">Select type</option>
+                    <option>Passport</option>
+                    <option>Driving License</option>
+                  </select>
+                </div>
+
+                <div className="Adminform-group">
+                  <label>ID Number</label>
                   <input
                     type="text"
-                    placeholder="e.g. CEO, CTO"
-                    value={jobTitle}
-                    onChange={(e)=>setJobTitle(e.target.value)}
+                    value={idNumber}
+                    onChange={(e)=>setIdNumber(e.target.value)}
                     required
                   />
                 </div>
 
               </div>
 
-              {/* Verification */}
-              <div className="Adminform-verification">
+              <div className="checkbox-wrapper">
 
-                <h3>Verification</h3>
+                <input
+                  type="checkbox"
+                  checked={terms}
+                  onChange={(e)=>setTerms(e.target.checked)}
+                />
 
-                <div className="Adminform-row">
-
-                  <div className="Adminform-group">
-                    <label>Government ID Type</label>
-                    <select required
-                      value={idType}
-                      onChange={(e)=>setIdType(e.target.value)}
-                    >
-                      <option value="">Select type</option>
-                      <option>Passport</option>
-                      <option>Driving License</option>
-                    </select>
-                  </div>
-
-                  <div className="Adminform-group">
-                    <label>ID Number</label>
-                    <input
-                      type="text"
-                      placeholder="Enter ID number"
-                      value={idNumber}
-                      onChange={(e)=>setIdNumber(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                </div>
-
-                <div className="checkbox-wrapper">
-
-                  <input
-                    type="checkbox"
-                    id="termsCheckbox"
-                    checked={terms}
-                    onChange={(e)=>setTerms(e.target.checked)}
-                    required
-                  />
-
-                  <label htmlFor="termsCheckbox" className="checkbox-label">
-                    I agree to the <Link to="/condition">Terms of Service</Link>
-                    and confirm I am authorized to create this account.
-                  </label>
-
-                </div>
+                <label>
+                  I agree to the <Link to="/condition">Terms of Service</Link>
+                </label>
 
               </div>
 
-              {/* Buttons */}
               <div className="button-group">
 
                 <button
                   type="button"
                   className="privious-btn"
                   onClick={handlePrevious}
-
                 >
                   Previous
                 </button>
 
                 <button
-              type="submit"
-              className="Signupsubmit-btn"
-             >
+                  type="submit"
+                  className="Signupsubmit-btn"
+                >
                   Continue <FaArrowRight />
                 </button>
 

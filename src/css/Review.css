@@ -1,0 +1,169 @@
+/* ================= LOGO ================= */
+.reviewlogo-img {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* ================= HEADER ================= */
+.review-header {
+  background: #1f2937;
+  color: #7d8390;
+  width: 100%;
+}
+
+.review-header-top {
+  display: flex;
+  align-items: center;
+  padding: 15px 40px;
+  border-bottom: 1px solid #374151;
+}
+
+.review-container{
+background:#0f172a;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:40px;
+}
+
+.review-card{
+width:900px;
+background:#1e293b;
+padding:30px;
+border-radius:10px;
+color:white;
+box-shadow:0 5px 20px rgba(0,0,0,0.3);
+}
+
+.subtitle{
+color:#94a3b8;
+margin-bottom:20px;
+}
+
+.review-check{
+text-align:center;
+margin:20px 0;
+}
+
+.review-title{
+text-align:center;
+margin-top:10px;
+}
+
+.review-sub{
+text-align:center;
+color:#94a3b8;
+margin-bottom:30px;
+}
+
+.review-box{
+background:#0f172a;
+border-radius:8px;
+padding:20px;
+margin-bottom:20px;
+border:1px solid #334155;
+}
+
+.review-box-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.edit-btn{
+color:#3b82f6;
+cursor:pointer;
+font-size:14px;
+}
+
+.review-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.label{
+font-size:12px;
+color:#94a3b8;
+margin-bottom:5px;
+}
+
+.warning-box{
+background:#3f2f14;
+padding:15px;
+border-radius:6px;
+color:#facc15;
+font-size:14px;
+margin-top:10px;
+}
+
+.review-buttons{
+display:flex;
+justify-content:space-between;
+margin-top:25px;
+}
+
+.prev-btn{
+background:transparent;
+border:none;
+color:#94a3b8;
+font-size:16px;
+cursor:pointer;
+}
+
+.finish-btn{
+background:#2563eb;
+border:none;
+color:white;
+padding:10px 20px;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+}
+
+.finish-btn:hover{
+background:#1d4ed8;
+}
+
+
+
+/* ================= STEPS ================= */
+
+.Signup-steps{
+display:flex;
+justify-content:center;
+gap:80px;
+padding:20px;
+background:#1f2937;
+}
+
+.step{
+text-align:center;
+color:#9ca3af;
+}
+
+.circle{
+width:35px;
+height:35px;
+border-radius:50%;
+background:#374151;
+display:flex;
+align-items:center;
+justify-content:center;
+margin:auto;
+margin-bottom:5px;
+}
+
+.step.active .circle{
+background:#2563eb;
+color:white;
+}
+
+.step p{
+font-size:13px;
+margin-top:5px;
+}
