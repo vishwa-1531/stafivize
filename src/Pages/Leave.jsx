@@ -1,191 +1,170 @@
 import React, { useEffect, useState } from "react";
 import "../css/Leave.css";
-import "../css/Sidebar.css";
 import Sidebar from "./Sidebar";
-import {
-  FaCalendarAlt,
-  FaCheckCircle,
-  FaClock,
-  FaUniversity,
-} from "react-icons/fa";
-
 import { db } from "../firebase";
+
 import {
   collection,
-  addDoc,
-  getDocs,
+  onSnapshot,
   updateDoc,
   doc,
-  serverTimestamp,
+  query,
+  orderBy
 } from "firebase/firestore";
+
+import {
+  FaClock,
+  FaCheckCircle,
+  FaCalendarAlt,
+  FaUniversity,
+  FaFileExport
+} from "react-icons/fa";
 
 const Leave = () => {
   const [leave, setLeave] = useState([]);
+  const [filter, setFilter] = useState("All");
 
-  
-  const [formData, setFormData] = useState({
-    employeeName: "",
-    leaveType: "",
-    startDate: "",
-    endDate: "",
-  });
-
-  
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
- 
-  const calculateDays = () => {
-    if (!formData.startDate || !formData.endDate) return 0;
-
-    const start = new Date(formData.startDate);
-    const end = new Date(formData.endDate);
-
-    const diffTime = end - start;
-    const diffDays = diffTime / (1000 * 60 * 60 * 24) + 1;
-
-    return diffDays > 0 ? diffDays : 0;
-  };
-
-  
-  const fetchLeave = async () => {
-    const querySnapshot = await getDocs(collection(db, "leave"));
-    const data = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setLeave(data);
-  };
+  const today = new Date();
 
   useEffect(() => {
-    fetchLeave();
+    const q = query(collection(db, "leave"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setLeave(data);
+    });
+    return () => unsub();
   }, []);
 
-
-  const addLeave = async () => {
-    if (
-      !formData.employeeName ||
-      !formData.leaveType ||
-      !formData.startDate ||
-      !formData.endDate
-    ) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    await addDoc(collection(db, "leave"), {
-      ...formData,
-      days: calculateDays(),
-      status: "Pending",
-      createdAt: serverTimestamp(),
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = date.toDate ? date.toDate() : new Date(date);
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
     });
-
-    
-    setFormData({
-      employeeName: "",
-      leaveType: "",
-      startDate: "",
-      endDate: "",
-    });
-
-    fetchLeave();
   };
 
-  
-  const updateStatus = async (id, newStatus) => {
-    const leaveRef = doc(db, "leave", id);
-    await updateDoc(leaveRef, {
-      status: newStatus,
-    });
-
-    fetchLeave();
+  // Disable action buttons if leave is in the past
+  const isPastLeave = (item) => {
+    if (!item.startDate) return false;
+    const start = item.startDate.toDate ? item.startDate.toDate() : new Date(item.startDate);
+    return start < today;
   };
+
+  // Check if leave starts today
+  const isTodayLeave = (item) => {
+    if (!item.startDate) return false;
+    const start = item.startDate.toDate ? item.startDate.toDate() : new Date(item.startDate);
+    return start.toDateString() === today.toDateString();
+  };
+
+  const updateStatus = async (id, status) => {
+    await updateDoc(doc(db, "leave", id), {
+      status: status,
+      approvedAt: new Date()
+    });
+  };
+
+  const filteredLeave = leave.filter(item => {
+    if (filter === "All") return true;
+    return item.status === filter;
+  });
+
+  const pendingRequests = leave.filter(l => l.status === "Pending").length;
+
+  const approvedToday = leave.filter(l => {
+    if (l.status !== "Approved" || !l.approvedAt) return false;
+    const d = l.approvedAt.toDate ? l.approvedAt.toDate() : new Date(l.approvedAt);
+    return d.toDateString() === today.toDateString();
+  }).length;
+
+  const upcomingLeaves = leave.filter(l => {
+    if (!l.startDate) return false;
+    const start = l.startDate.toDate ? l.startDate.toDate() : new Date(l.startDate);
+    return start > today;
+  }).length;
+
+  const exportCSV = () => {
+    const headers = ["Employee", "Role", "Leave Type", "Start Date", "End Date", "Days", "Status"];
+    const rows = filteredLeave.map(l => [
+      l.employeeName,
+      l.role,
+      l.leaveType,
+      formatDate(l.startDate),
+      formatDate(l.endDate),
+      l.days,
+      l.status
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].map(e => e.join(",")).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "leave_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  const getInitials = (name) => {
+  if (!name) return "";
+  const words = name.trim().split(" ");
+  if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+};
 
   return (
     <div className="leave-layout">
       <Sidebar />
 
       <div className="leave-content-right">
+        {/* HEADER */}
         <div className="leave-header">
-          <div>
-            <h2>Leave Management</h2>
-            <p>Review, approve, and track employee leave applications.</p>
-          </div>
+          <h2>Leave Management</h2>
+          <p>Review, approve, and track employee leave applications.</p>
         </div>
 
-        
-        <div className="leave-form">
-          <input
-            type="text"
-            name="employeeName"
-            placeholder="Employee Name"
-            value={formData.employeeName}
-            onChange={handleChange}
-          />
-
-          <select
-            name="leaveType"
-            value={formData.leaveType}
-            onChange={handleChange}
-          >
-            <option value="">Select Leave Type</option>
-            <option value="Sick Leave">Sick Leave</option>
-            <option value="Casual Leave">Casual Leave</option>
-            <option value="Paid Leave">Paid Leave</option>
-          </select>
-
-          <input
-            type="date"
-            name="startDate"
-            value={formData.startDate}
-            onChange={handleChange}
-          />
-
-          <input
-            type="date"
-            name="endDate"
-            value={formData.endDate}
-            onChange={handleChange}
-          />
-
-          <button className="apply-btn" onClick={addLeave}>
-            Submit
-          </button>
-        </div>
-
-       
+        {/* STATS */}
         <div className="stats-container">
           <div className="stat-card">
             <FaClock className="icon yellow" />
             <h4>Pending Requests</h4>
-            <h2>{leave.filter((l) => l.status === "Pending").length}</h2>
+            <h2>{pendingRequests}</h2>
           </div>
 
           <div className="stat-card">
             <FaCheckCircle className="icon green" />
-            <h4>Approved</h4>
-            <h2>{leave.filter((l) => l.status === "Approved").length}</h2>
+            <h4>Approved Today</h4>
+            <h2>{approvedToday}</h2>
           </div>
 
           <div className="stat-card">
             <FaCalendarAlt className="icon blue" />
-            <h4>Total Leaves</h4>
-            <h2>{leave.length}</h2>
+            <h4>Upcoming Leaves</h4>
+            <h2>{upcomingLeaves}</h2>
           </div>
 
           <div className="stat-card">
             <FaUniversity className="icon purple" />
-            <h4>Remaining Balance</h4>
-           
+            <h4>Total Leave Requests</h4>
+            <h2>{leave.length}</h2>
           </div>
         </div>
 
+        {/* FILTERS & EXPORT */}
         
+
+        {/* TABLE */}
         <div className="table-section">
+          <div className="table-top">
+          <div className="tabs">
+            <button className={filter === "All" ? "active" : ""} onClick={() => setFilter("All")}>All</button>
+            <button className={filter === "Pending" ? "active" : ""} onClick={() => setFilter("Pending")}>Pending</button>
+            <button className={filter === "Approved" ? "active" : ""} onClick={() => setFilter("Approved")}>Approved</button>
+            <button className={filter === "Rejected" ? "active" : ""} onClick={() => setFilter("Rejected")}>History</button>
+          </div>
+          <button className="export-btn" onClick={exportCSV}><FaFileExport /> Export </button>
+        </div>
           <table>
             <thead>
               <tr>
@@ -197,32 +176,58 @@ const Leave = () => {
                 <th>Action</th>
               </tr>
             </thead>
-
             <tbody>
-              {leave.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.employeeName}</td>
-                  <td>{item.leaveType}</td>
-                  <td>
-                    {item.startDate} - {item.endDate}
+              {filteredLeave.map(item => (
+                <tr
+                  key={item.id}
+                  className={isTodayLeave(item) ? "highlight-today" : ""}
+                >
+                  <td className="employee">
+                    <div className="emp-info">
+                     {item.avatar ? (
+  <img src={item.avatar} alt={item.employeeName} />
+) : (
+  <div className="avatar-initials">
+    {getInitials(item.employeeName)}
+  </div>
+)}
+                      <div>
+                        <p className="emp-name">{item.employeeName}</p>
+                        <span className="emp-role">{item.role}</span>
+                      </div>
+                    </div>
                   </td>
-                  <td>{item.days}</td>
-                  <td>
-                    <span className={`status ${item.status?.toLowerCase()}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => updateStatus(item.id, "Approved")}
-                    >
-                      Approve
-                    </button>
 
+                  <td className="leave-type">
+                    <span className="leave-dot"></span>
+                    {item.leaveType}
+                  </td>
+
+                  <td>
+                    {formatDate(item.startDate)} - {formatDate(item.endDate)}
+                    <div className="applied">Applied on {formatDate(item.createdAt)}</div>
+                  </td>
+
+                  <td>{item.days} days</td>
+
+                  <td>
+                    <span className={`status ${item.status.toLowerCase()}`}>{item.status}</span>
+                  </td>
+
+                  <td className="actions">
                     <button
-                      onClick={() => updateStatus(item.id, "Rejected")}
+                      className="approve"
+                      onClick={() => updateStatus(item.id, "Approved")}
+                      disabled={item.status !== "Pending" || isPastLeave(item)}
                     >
-                      Reject
+                      ✔
+                    </button>
+                    <button
+                      className="reject"
+                      onClick={() => updateStatus(item.id, "Rejected")}
+                      disabled={item.status !== "Pending" || isPastLeave(item)}
+                    >
+                      ✖
                     </button>
                   </td>
                 </tr>
@@ -230,6 +235,7 @@ const Leave = () => {
             </tbody>
           </table>
         </div>
+
       </div>
     </div>
   );

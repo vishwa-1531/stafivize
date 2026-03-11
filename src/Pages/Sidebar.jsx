@@ -1,5 +1,6 @@
+// Sidebar.jsx
 import React, { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "../css/Sidebar.css";
 import logo from "../image/logo.png";
 
@@ -14,25 +15,17 @@ import {
 } from "react-icons/fa";
 
 import { auth, db, storage } from "../firebase";
-
 import { doc, getDoc, setDoc } from "firebase/firestore";
-
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject
-} from "firebase/storage";
-
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { onAuthStateChanged } from "firebase/auth";
 
 const Sidebar = () => {
+  const location = useLocation();
+
   const [profileImage, setProfileImage] = useState(null);
+  const [profileImagePath, setProfileImagePath] = useState(null);
   const [userName, setUserName] = useState("");
 
-  // =========================
-  // Get initials
-  // =========================
   const getInitials = (name) => {
     if (!name) return "";
     const names = name.trim().split(" ");
@@ -40,49 +33,46 @@ const Sidebar = () => {
     return (names[0][0] + names[1][0]).toUpperCase();
   };
 
-  // =========================
-  // Avatar color generator
-  // =========================
   const getAvatarColor = (name) => {
-    const colors = [
-      "#3b82f6",
-      "#10b981",
-      "#f59e0b",
-      "#ef4444",
-      "#8b5cf6",
-      "#06b6d4"
-    ];
+    const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
     if (!name) return colors[0];
     let charCodeSum = 0;
     for (let i = 0; i < name.length; i++) charCodeSum += name.charCodeAt(i);
     return colors[charCodeSum % colors.length];
   };
 
-  // =========================
-  // Fetch user data
-  // =========================
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
           const userRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const data = userSnap.data();
-            setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
-            setProfileImage(data.profileImage || null);
+          let userSnap = await getDoc(userRef);
+
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              firstName: user.displayName?.split(" ")[0] || "",
+              lastName: user.displayName?.split(" ")[1] || "",
+              email: user.email || "",
+              profileImage: "",
+              profileImagePath: "",
+              createdAt: new Date()
+            });
+            userSnap = await getDoc(userRef);
           }
+
+          const data = userSnap.data();
+          setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
+          setProfileImage(data.profileImage || null);
+          setProfileImagePath(data.profileImagePath || null);
         } catch (error) {
-          console.log("Fetch user error:", error);
+          console.error("Fetch/create user error:", error);
         }
       }
     });
+
     return () => unsubscribe();
   }, []);
 
-  // =========================
-  // Upload profile image
-  // =========================
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -93,75 +83,97 @@ const Sidebar = () => {
 
       const userRef = doc(db, "users", user.uid);
 
-      // Delete old image if exists
-      if (profileImage) {
+      if (profileImagePath) {
         try {
-          const oldImageRef = ref(storage, profileImage);
+          const oldImageRef = ref(storage, profileImagePath);
           await deleteObject(oldImageRef);
         } catch (err) {
           console.log("Old image not found or already deleted.");
         }
       }
 
-      // Upload new image with timestamp to prevent overwrites
       const imageRef = ref(storage, `profileImages/${user.uid}_${Date.now()}`);
       await uploadBytes(imageRef, file);
-
       const downloadURL = await getDownloadURL(imageRef);
 
-      // Save URL in Firestore
       await setDoc(
         userRef,
-        { profileImage: downloadURL },
+        {
+          profileImage: downloadURL,
+          profileImagePath: imageRef.fullPath
+        },
         { merge: true }
       );
 
       setProfileImage(downloadURL);
+      setProfileImagePath(imageRef.fullPath);
     } catch (error) {
-      console.log("Upload error:", error);
+      console.error("Upload error:", error);
       alert("Failed to upload image. Please try again.");
     }
   };
 
+  const employeeActive =
+    location.pathname === "/Employee" ||
+    location.pathname.startsWith("/employee-profile");
+
   return (
     <div className="sidebar">
-      {/* ================= Logo ================= */}
       <div className="sidebar-header">
         <img src={logo} alt="Logo" className="logo-img" />
       </div>
 
-      {/* ================= Menu ================= */}
       <ul className="sidebar-menu">
-        <NavLink to="/Dashboard" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <NavLink
+          to="/Dashboard"
+          className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
+        >
           <FaThLarge className="menu-icon" /> Dashboard
         </NavLink>
 
-        <NavLink to="/Employee" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <NavLink
+          to="/Employee"
+          className={employeeActive ? "nav-item active" : "nav-item"}
+        >
           <FaUsers className="menu-icon" /> Employees
         </NavLink>
 
-        <NavLink to="/Attendance" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <NavLink
+          to="/Attendance"
+          className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
+        >
           <FaCalendarCheck className="menu-icon" /> Attendance
         </NavLink>
 
-        <NavLink to="/Leave" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <NavLink
+          to="/Leave"
+          className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
+        >
           <FaCalendarAlt className="menu-icon" /> Leave
         </NavLink>
 
-        <NavLink to="/Payroll" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <NavLink
+          to="/Payroll"
+          className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
+        >
           <FaWallet className="menu-icon" /> Payroll
         </NavLink>
 
-        <NavLink to="/Report" end className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+        <NavLink
+          to="/Report"
+          className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
+        >
           <FaChartBar className="menu-icon" /> Reports
         </NavLink>
 
-        <NavLink to="/Login" end className={({ isActive }) => isActive ? "logout-item active" : "logout-item"}>
+        <NavLink
+          to="/Login"
+          className={({ isActive }) => (isActive ? "logout-item active" : "logout-item")}
+        >
           <FaSignOutAlt className="menu-icon" /> LogOut
         </NavLink>
       </ul>
 
-      {/* ================= Profile Section ================= */}
       <div className="sidebar-profile">
         <label htmlFor="profileUpload">
           {profileImage ? (
@@ -172,7 +184,10 @@ const Sidebar = () => {
               onError={() => setProfileImage(null)}
             />
           ) : (
-            <div className="profile-initials" style={{ backgroundColor: getAvatarColor(userName) }}>
+            <div
+              className="profile-initials"
+              style={{ backgroundColor: getAvatarColor(userName) }}
+            >
               {getInitials(userName)}
             </div>
           )}

@@ -13,6 +13,8 @@ import Payroll from './Pages/Payroll';
 import Report from './Pages/Report';
 import Admin from './Pages/Admin';
 import Review from './Pages/Review';
+import EmployeeProfile from './Pages/EmployeeProfile';
+
 
 
 
@@ -23,10 +25,8 @@ function App() {
  
 <Routes>
   <Route path="/" element={<Home />} />
-  
   <Route path="/Login" element={<Login />}/>
   <Route path="/SignUp" element={<SignUp/>}/>
-  
   <Route path='/Dashboard' element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
   <Route path='/Employee' element={<ProtectedRoute><Employee/></ProtectedRoute>}/>
   <Route path='/Attendance' element={<ProtectedRoute><Attendance/></ProtectedRoute>}/>
@@ -36,7 +36,18 @@ function App() {
   <Route path='/Report' element={<ProtectedRoute><Report/></ProtectedRoute>}/>
   <Route path='/Admin' element={<Admin/>}/>
   <Route path='/Review' element={<Review/>}/>
+  <Route
+  path="/employee-profile/:id"
+  element={
+    <ProtectedRoute>
+      <EmployeeProfile />
+    </ProtectedRoute>
+  }
+/>
+
 </Routes> 
+
+
  );
 
  }

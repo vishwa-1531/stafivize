@@ -1,0 +1,299 @@
+.payroll-container{
+padding:30px;
+color:white;
+background:#0f172a;
+min-height:100vh;
+}
+
+/* header */
+
+.payroll-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+}
+
+.payroll-header h1{
+font-size:28px;
+margin-bottom:4px;
+}
+
+.payroll-header p{
+color:#94a3b8;
+}
+
+.payroll-actions{
+display:flex;
+gap:10px;
+}
+
+.action-btn{
+background:#1e293b;
+border:none;
+color:#cbd5f5;
+padding:10px 14px;
+border-radius:8px;
+cursor:pointer;
+display:flex;
+gap:8px;
+align-items:center;
+}
+
+.run-btn{
+background:#3b82f6;
+border:none;
+padding:10px 16px;
+border-radius:8px;
+color:white;
+cursor:pointer;
+display:flex;
+gap:8px;
+align-items:center;
+}
+
+/* cards */
+
+.payroll-cards{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:18px;
+margin-bottom:30px;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+}
+
+.card p{
+color:#94a3b8;
+margin-bottom:10px;
+}
+
+.card h2{
+font-size:24px;
+}
+
+.card span{
+color:#64748b;
+font-size:13px;
+}
+
+/* records */
+
+.records-container{
+background:#1e293b;
+border-radius:12px;
+padding:20px;
+}
+
+.records-header{
+display:flex;
+justify-content:space-between;
+margin-bottom:20px;
+}
+
+.records-header input{
+background:#0f172a;
+border:none;
+padding:10px;
+border-radius:8px;
+color:white;
+width:240px;
+}
+
+.records-actions{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+.filter-btn{
+cursor:pointer;
+}
+
+/* table */
+
+.payroll-table{
+width:100%;
+border-collapse:collapse;
+}
+
+.payroll-table th{
+text-align:left;
+color:#94a3b8;
+font-weight:500;
+padding:14px 10px;
+border-bottom:1px solid #334155;
+}
+
+.payroll-table td{
+padding:14px 10px;
+border-bottom:1px solid #334155;
+}
+
+.employee-cell{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.employee-cell img{
+width:40px;
+height:40px;
+border-radius:50%;
+object-fit:cover;
+}
+
+.employee-cell span{
+color:#94a3b8;
+font-size:13px;
+}
+
+.bonus{
+color:#10b981;
+}
+
+.deduction{
+color:#ef4444;
+}
+
+.status{
+padding:5px 10px;
+border-radius:20px;
+font-size:12px;
+}
+
+.status.processed{
+background:#064e3b;
+color:#34d399;
+}
+
+.status.pending{
+background:#78350f;
+color:#fbbf24;
+}
+
+.status.hold{
+background:#7f1d1d;
+color:#f87171;
+}
+
+.dashboard-layout{
+display:flex;
+}
+
+/* sidebar width */
+.sidebar{
+width:250px;
+}
+
+/* payroll area */
+.payroll-container{
+flex:1;
+padding:30px;
+background:#0f172a;
+min-height:100vh;
+}
+.month-select{
+display:flex;
+align-items:center;
+gap:8px;
+background:#1e293b;
+padding:8px 12px;
+border-radius:8px;
+}
+
+.month-select select{
+border:none;
+color:white;
+outline:none;
+cursor:pointer;
+}
+.card-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+.card-icon{
+width:35px;
+height:35px;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:8px;
+font-size:14px;
+}
+
+.card-icon.blue{
+background:#1d4ed8;
+}
+
+.card-icon.green{
+background:#065f46;
+}
+
+.card-icon.yellow{
+background:#92400e;
+}
+
+.progress{
+height:6px;
+background:#334155;
+border-radius:10px;
+margin-top:10px;
+}
+
+.progress-bar{
+height:100%;
+background:#10b981;
+border-radius:10px;
+}
+/* search */
+
+.search-box{
+position:relative;
+width:320px;
+}
+
+.search-box input{
+width:100%;
+background:#0b1628;
+border:none;
+padding:12px 40px;
+border-radius:12px;
+color:#cbd5f5;
+font-size:14px;
+outline:none;
+}
+
+.search-icon{
+position:absolute;
+left:14px;
+top:50%;
+transform:translateY(-50%);
+color:#64748b;
+font-size:14px;
+}
+
+/* dropdown icon */
+
+.dropdown-icon{
+margin-left:6px;
+font-size:12px;
+}
+
+/* filter button */
+
+.filter-btn{
+background:#0f172a;
+border:none;
+padding:10px;
+border-radius:8px;
+color:#cbd5f5;
+cursor:pointer;
+}
