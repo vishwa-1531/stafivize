@@ -7,7 +7,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyB3nXqBWsSRkVOlpu-7s0oJxf_00JkQOXs",
   authDomain: "stafivize-97c33.firebaseapp.com",
   projectId: "stafivize-97c33",
-  storageBucket: "stafivize-97c33.firebasestorage.app",
+  storageBucket: "stafivize-97c33.appspot.com", 
   messagingSenderId: "886142826082",
   appId: "1:886142826082:web:8395a1e8b1b9b26b3fc33b"
 };

@@ -64,26 +64,34 @@ font-size: 16px;
 
 /* Logout */
 
+/* Logout */
+
 .logout-item {
-display: flex;
-align-items: center;
-gap: 12px;
-padding: 12px 14px;
-border-radius: 10px;
-text-decoration: none;
-color: #f87171;
-transition: 0.3s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-decoration: none;
+  color: #f87171;
+  cursor: pointer;
+  transition: 0.3s ease;
+  font: inherit;
+  text-align: left;
 }
 
 .logout-item:hover {
-background-color: #334155;
-color: #ffffff;
+  background-color: #334155;
+  color: #ffffff;
 }
 
-.logout-item.active {
-background-color: #ef4444;
-color: #ffffff;
-font-weight: 600;
+.logout-item .menu-icon {
+  font-size: 16px;
 }
 
 /* Profile Section */

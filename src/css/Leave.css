@@ -260,36 +260,56 @@ tbody tr:hover {
   gap: 6px;
 }
 
+/* ===============================
+   ACTION BUTTONS
+=================================*/
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .actions button {
-  width: 32px;
-  height: 30px;
+  width: 80px;
+  height: 50px;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 18px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: 0.2s ease;
 }
 
-.actions button:first-child {
+/* Approve button */
+.actions .approve {
   background: #22c55e;
-  color: white;
+  color: #fff;
 }
 
-.actions button:first-child:hover {
+.actions .approve:hover {
   background: #16a34a;
 }
 
-.actions button:last-child {
+/* Reject button */
+.actions .reject {
   background: #ef4444;
-  color: white;
+  color: #fff;
 }
 
-.actions button:last-child:hover {
+.actions .reject:hover {
   background: #dc2626;
 }
 
+/* Disabled state */
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 
 /* ===============================
@@ -311,4 +331,41 @@ tbody tr:hover {
   font-weight: 600;
   font-size: 14px;
   text-transform: uppercase;
+}
+.table-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  border: none;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.export-btn:hover {
+  background: #1d4ed8;
+}
+
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-data {
+  text-align: center;
+  color: #94a3b8;
+  padding: 24px;
 }

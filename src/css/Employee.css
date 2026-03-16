@@ -170,36 +170,106 @@
   background: #1f2937;
   border-radius: 12px;
   padding: 20px;
+  overflow-x: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+thead th,
+tbody td {
+  text-align: left;
+  vertical-align: middle;
 }
 
 thead th {
-  text-align: left;
   font-size: 13px;
   color: #8fa3c0;
-  padding-bottom: 15px;
+  padding: 18px 12px;
+}
+
+tbody td {
+  padding: 20px 12px;
+  font-size: 14px;
+  color: #d4e1ff;
 }
 
 tbody tr {
   border-top: 1px solid #1f2b40;
 }
 
-tbody td {
-  padding: 15px 0;
-  font-size: 14px;
-  color: #d4e1ff;
+/* column widths */
+thead th:nth-child(1),
+tbody td:nth-child(1) {
+  width: 18%;
 }
 
-/* ===== Three Dots ===== */
+thead th:nth-child(2),
+tbody td:nth-child(2) {
+  width: 20%;
+}
 
+thead th:nth-child(3),
+tbody td:nth-child(3) {
+  width: 24%;
+}
+
+thead th:nth-child(4),
+tbody td:nth-child(4) {
+  width: 16%;
+}
+
+thead th:nth-child(5),
+tbody td:nth-child(5) {
+  width: 16%;
+}
+
+thead th:nth-child(6),
+tbody td:nth-child(6) {
+  width: 6%;
+  text-align: center;
+}
+
+/* status */
+.status-cell {
+  vertical-align: middle;
+}
+
+.status-cell-inner {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.status-badge {
+  min-width: 110px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.status-Active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.status-DeActive {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* three dots */
 .menu-cell {
   text-align: center;
-  vertical-align: middle;
-  width: 60px;
 }
 
 .dots-btn {

@@ -444,3 +444,36 @@ td{
   opacity:0.45;
   cursor:not-allowed;
 }
+.topbar-icon-wrapper {
+  position: relative;
+}
+
+.topbar-dropdown {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 260px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  z-index: 999;
+}
+
+.topbar-dropdown h4 {
+  margin: 0 0 10px;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.topbar-dropdown p {
+  margin: 0 0 8px;
+  color: #cbd5e1;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.topbar-dropdown p:last-child {
+  margin-bottom: 0;
+}

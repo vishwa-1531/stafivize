@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import "../css/Dashboard.css";
 import "../css/Sidebar.css";
 import Sidebar from "./Sidebar";
-
 import {
   FaUsers,
   FaUserCheck,
@@ -14,214 +13,402 @@ import { auth, db } from "../firebase";
 import { doc, getDoc, collection, onSnapshot } from "firebase/firestore";
 
 const Dashboard = () => {
-
   const [userName, setUserName] = useState("");
-  const [stats, setStats] = useState({});
-  const [attendance, setAttendance] = useState({});
-  const [departments, setDepartments] = useState({});
+  const [employees, setEmployees] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [leave, setLeave] = useState([]);
+  const [payroll, setPayroll] = useState([]);
+  const [range, setRange] = useState("7");
 
-  /* ================= USER ================= */
+  const normalizeDate = useCallback((value) => {
+    if (!value) return null;
+    if (value?.toDate) return value.toDate();
+    if (value instanceof Date) return value;
+
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, []);
+
+  const formatShortDate = useCallback((date) => {
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }, []);
+
+  const getTodayString = useCallback(() => {
+    const today = new Date();
+    return today.toDateString();
+  }, []);
 
   useEffect(() => {
-
     const fetchUser = async () => {
       const user = auth.currentUser;
+      if (!user) return;
 
-      if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserName(data.firstName + " " + data.lastName);
-        }
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
       }
     };
 
     fetchUser();
-
   }, []);
-
-  /* ================= DASHBOARD STATS ================= */
 
   useEffect(() => {
+    const unsubEmployees = onSnapshot(collection(db, "employee"), (snapshot) => {
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+      setEmployees(data);
+    });
 
-    const unsubStats = onSnapshot(
-      collection(db, "dashboardStats"),
-      (snapshot) => {
-        if (!snapshot.empty) {
-          setStats(snapshot.docs[0].data());
-        }
-      }
-    );
+    const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+      setAttendance(data);
+    });
 
-    const unsubAttendance = onSnapshot(
-      collection(db, "attendance"),
-      (snapshot) => {
-        if (!snapshot.empty) {
-          setAttendance(snapshot.docs[0].data());
-        }
-      }
-    );
+    const unsubLeave = onSnapshot(collection(db, "leave"), (snapshot) => {
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+      setLeave(data);
+    });
 
-    const unsubDept = onSnapshot(
-      collection(db, "departments"),
-      (snapshot) => {
-        if (!snapshot.empty) {
-          setDepartments(snapshot.docs[0].data());
-        }
-      }
-    );
+    const unsubPayroll = onSnapshot(collection(db, "payroll"), (snapshot) => {
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+      setPayroll(data);
+    });
 
     return () => {
-      unsubStats();
+      unsubEmployees();
       unsubAttendance();
-      unsubDept();
+      unsubLeave();
+      unsubPayroll();
     };
-
   }, []);
 
-  return (
+  const todayString = useMemo(() => getTodayString(), [getTodayString]);
 
+  const totalEmployees = useMemo(() => employees.length, [employees]);
+
+  const todayAttendanceRecords = useMemo(() => {
+    return attendance.filter((item) => {
+      const recordDate = normalizeDate(
+        item.date || item.attendanceDate || item.createdAt
+      );
+      return recordDate ? recordDate.toDateString() === todayString : false;
+    });
+  }, [attendance, normalizeDate, todayString]);
+
+ const presentToday = useMemo(() => {
+  const presentIds = new Set();
+
+  todayAttendanceRecords.forEach((item) => {
+    const status = String(item.status || item.attendanceStatus || "")
+      .trim()
+      .toLowerCase();
+
+    if (status === "on time" || status === "late" || status === "present") {
+      presentIds.add(item.employeeId || item.id);
+    }
+  });
+
+  return presentIds.size;
+}, [todayAttendanceRecords]);
+
+
+ const onLeaveToday = useMemo(() => {
+  return leave.filter((item) => {
+    const status = String(item.status || item.leaveStatus || "")
+      .trim()
+      .toLowerCase();
+
+    const fromDate = normalizeDate(
+      item.fromDate || item.startDate || item.leaveFrom || item.createdAt
+    );
+
+    const toDate = normalizeDate(
+      item.toDate || item.endDate || item.leaveTo || item.createdAt
+    );
+
+    if (status !== "approved" && status !== "pending") return false;
+    if (!fromDate || !toDate) return false;
+
+    const today = new Date();
+    const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const start = new Date(fromDate.getFullYear(), fromDate.getMonth(), fromDate.getDate());
+    const end = new Date(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+
+    return current >= start && current <= end;
+  }).length;
+}, [leave, normalizeDate]);
+  const employeeGrowth = useMemo(() => {
+    if (totalEmployees === 0) return "0%";
+
+    const now = new Date();
+    const last30Days = employees.filter((emp) => {
+      const joinedDate = normalizeDate(emp.joinDate || emp.createdAt);
+      if (!joinedDate) return false;
+
+      const diff = now - joinedDate;
+      const days = diff / (1000 * 60 * 60 * 24);
+      return days <= 30;
+    }).length;
+
+    const percentage = Math.round((last30Days / totalEmployees) * 100);
+    return `+${percentage}%`;
+  }, [employees, totalEmployees, normalizeDate]);
+
+  const attendanceRate = useMemo(() => {
+    if (totalEmployees === 0) return "0%";
+    return `${Math.round((presentToday / totalEmployees) * 100)}%`;
+  }, [presentToday, totalEmployees]);
+
+ const urgentLeaves = useMemo(() => {
+  const pendingLeaves = leave.filter((item) => {
+    const status = String(item.status || item.leaveStatus || "")
+      .trim()
+      .toLowerCase();
+
+    return status === "pending";
+  }).length;
+
+  return `${pendingLeaves} Pending`;
+}, [leave]);
+  const currentMonthPayroll = useMemo(() => {
+    const now = new Date();
+    const monthName = now.toLocaleString("en-US", { month: "long" }).toLowerCase();
+    const year = now.getFullYear();
+
+    return payroll.filter((item) => {
+      if (item.month) {
+        const monthText = String(item.month).toLowerCase();
+        return monthText.includes(monthName) && monthText.includes(String(year));
+      }
+
+      const createdAt = normalizeDate(item.createdAt);
+      return createdAt
+        ? createdAt.getMonth() === now.getMonth() &&
+            createdAt.getFullYear() === now.getFullYear()
+        : false;
+    });
+  }, [payroll, normalizeDate]);
+
+  const payrollMonth = useMemo(() => {
+    return new Date().toLocaleString("en-US", { month: "short", year: "numeric" });
+  }, []);
+
+  const payrollStatus = useMemo(() => {
+    if (totalEmployees === 0) return "No Data";
+    if (currentMonthPayroll.length === 0) return "Pending";
+    if (currentMonthPayroll.length >= totalEmployees) return "Completed";
+    return "In Progress";
+  }, [currentMonthPayroll.length, totalEmployees]);
+
+  const attendanceChartData = useMemo(() => {
+    const daysCount = Number(range);
+    const result = [];
+    const today = new Date();
+
+    for (let i = daysCount - 1; i >= 0; i--) {
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() - i);
+
+      const dayRecords = attendance.filter((item) => {
+        const recordDate = normalizeDate(
+          item.date || item.attendanceDate || item.createdAt
+        );
+        return recordDate
+          ? recordDate.toDateString() === targetDate.toDateString()
+          : false;
+      });
+
+     const presentCount = dayRecords.filter((item) => {
+  const status = String(item.status || item.attendanceStatus || "")
+    .trim()
+    .toLowerCase();
+
+  return status === "on time" || status === "late" || status === "present";
+}).length;
+      const percentage =
+        totalEmployees > 0 ? Math.round((presentCount / totalEmployees) * 100) : 0;
+
+      result.push({
+        label: daysCount === 7
+          ? targetDate.toLocaleDateString("en-US", { weekday: "short" })
+          : formatShortDate(targetDate),
+        value: percentage
+      });
+    }
+
+    return result;
+  }, [attendance, totalEmployees, range, normalizeDate, formatShortDate]);
+
+  const departmentStats = useMemo(() => {
+    const total = employees.length;
+
+    if (total === 0) {
+      return {
+        engineering: 0,
+        sales: 0,
+        marketing: 0,
+        other: 0
+      };
+    }
+
+    let engineering = 0;
+    let sales = 0;
+    let marketing = 0;
+    let other = 0;
+
+    employees.forEach((emp) => {
+      const dept = String(emp.department || "").toLowerCase().trim();
+
+      if (dept === "engineering" || dept === "it") {
+        engineering += 1;
+      } else if (dept === "sales") {
+        sales += 1;
+      } else if (dept === "marketing") {
+        marketing += 1;
+      } else {
+        other += 1;
+      }
+    });
+
+    return {
+      engineering: Math.round((engineering / total) * 100),
+      sales: Math.round((sales / total) * 100),
+      marketing: Math.round((marketing / total) * 100),
+      other: Math.round((other / total) * 100)
+    };
+  }, [employees]);
+
+  return (
     <div className="dashboard-layout">
       <Sidebar />
 
       <div className="dashboard-content">
-
-        {/* Top Section */}
-
         <div className="topbar">
           <div className="topbar-left">
-
             <h2>Dashboard Overview</h2>
-            <p>Welcome back, {userName}. Here's what's happening today.</p>
-
+            <p>Welcome back, {userName || "User"}. Here's what's happening today.</p>
           </div>
         </div>
 
-        {/* Cards */}
-
         <div className="cards">
-
           <div className="card active-card">
-            <span className="card-badge blue-badge">{stats.employeeGrowth}</span>
+            <span className="card-badge blue-badge">{employeeGrowth}</span>
 
             <div className="icon-box blue-bg">
               <FaUsers className="card-icon" />
             </div>
 
             <h4>Total Employee</h4>
-            <h2>{stats.totalEmployees}</h2>
+            <h2>{totalEmployees}</h2>
           </div>
 
           <div className="card">
-            <span className="card-badge green-badge">{stats.attendanceRate}</span>
+            <span className="card-badge green-badge">{attendanceRate}</span>
 
             <div className="icon-box green-bg">
               <FaUserCheck className="card-icon" />
             </div>
 
             <h4>Present Today</h4>
-            <h2>{stats.presentToday}</h2>
+            <h2>{presentToday}</h2>
           </div>
 
           <div className="card">
-            <span className="card-badge yellow-badge">{stats.urgentLeaves}</span>
+            <span className="card-badge yellow-badge">{urgentLeaves}</span>
 
             <div className="icon-box yellow-bg">
               <FaUserTimes className="card-icon" />
             </div>
 
             <h4>On Leave</h4>
-            <h2>{stats.onLeave}</h2>
+            <h2>{onLeaveToday}</h2>
           </div>
 
           <div className="card">
-            <span className="card-badge blue-badge">{stats.payrollMonth}</span>
+            <span className="card-badge blue-badge">{payrollMonth}</span>
 
             <div className="icon-box blue-bg">
               <FaShieldAlt className="card-icon" />
             </div>
 
             <h4>Payroll Status</h4>
-            <h2>{stats.payrollStatus}</h2>
+            <h2>{payrollStatus}</h2>
           </div>
-
         </div>
 
-        {/* Bottom Section */}
-
         <div className="bottom-section">
-
-          {/* Attendance */}
-
           <div className="attendance">
-
             <div className="section-header">
               <h3>Attendance Trends</h3>
 
-              <select className="dropdown">
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>Last 3 months</option>
+              <select
+                className="dropdown"
+                value={range}
+                onChange={(e) => setRange(e.target.value)}
+              >
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 3 months</option>
               </select>
-
             </div>
 
             <div className="bars">
-              <div className="bar" style={{ height: attendance.mon + "%" }}></div>
-              <div className="bar" style={{ height: attendance.tue + "%" }}></div>
-              <div className="bar" style={{ height: attendance.wed + "%" }}></div>
-              <div className="bar" style={{ height: attendance.thu + "%" }}></div>
-              <div className="bar" style={{ height: attendance.fri + "%" }}></div>
-              <div className="bar" style={{ height: attendance.sat + "%" }}></div>
-              <div className="bar" style={{ height: attendance.sun + "%" }}></div>
+              {attendanceChartData.map((item, index) => (
+                <div
+                  key={index}
+                  className="bar"
+                  style={{ height: `${item.value}%` }}
+                  title={`${item.label} - ${item.value}%`}
+                ></div>
+              ))}
             </div>
 
             <div className="days">
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
-              <span>Sun</span>
+              {attendanceChartData.map((item, index) => (
+                <span key={index}>{item.label}</span>
+              ))}
             </div>
-
           </div>
 
-          {/* Department */}
-
           <div className="department">
-
             <h3>Department Distribution</h3>
 
             <div
               className="donut"
               style={{
                 background: `conic-gradient(
-                  #3b82f6 0% ${departments.engineering}%,
-                  #10b981 ${departments.engineering}% ${departments.engineering + departments.sales}%,
-                  #facc15 ${departments.engineering + departments.sales}% ${departments.engineering + departments.sales + departments.marketing}%,
-                  #6b7280 ${departments.engineering + departments.sales + departments.marketing}% 100%
+                  #3b82f6 0% ${departmentStats.engineering}%,
+                  #10b981 ${departmentStats.engineering}% ${departmentStats.engineering + departmentStats.sales}%,
+                  #facc15 ${departmentStats.engineering + departmentStats.sales}% ${departmentStats.engineering + departmentStats.sales + departmentStats.marketing}%,
+                  #6b7280 ${departmentStats.engineering + departmentStats.sales + departmentStats.marketing}% 100%
                 )`
               }}
             ></div>
 
             <div className="legend">
-              <div><span className="dot blue"></span> Engineering {departments.engineering}%</div>
-              <div><span className="dot green"></span> Sales {departments.sales}%</div>
-              <div><span className="dot yellow"></span> Marketing {departments.marketing}%</div>
-              <div><span className="dot gray"></span> Other {departments.other}%</div>
+              <div><span className="dot blue"></span> Engineering {departmentStats.engineering}%</div>
+              <div><span className="dot green"></span> Sales {departmentStats.sales}%</div>
+              <div><span className="dot yellow"></span> Marketing {departmentStats.marketing}%</div>
+              <div><span className="dot gray"></span> Other {departmentStats.other}%</div>
             </div>
-
           </div>
-
         </div>
-
       </div>
     </div>
-
   );
 };
 

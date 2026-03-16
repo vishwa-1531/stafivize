@@ -1,6 +1,5 @@
-// Sidebar.jsx
 import React, { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import "../css/Sidebar.css";
 import logo from "../image/logo.png";
 
@@ -15,58 +14,97 @@ import {
 } from "react-icons/fa";
 
 import { auth, db, storage } from "../firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const [profileImage, setProfileImage] = useState(null);
-  const [profileImagePath, setProfileImagePath] = useState(null);
+  const [profileImage, setProfileImage] = useState("");
   const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [uploading, setUploading] = useState(false);
 
-  const getInitials = (name) => {
-    if (!name) return "";
-    const names = name.trim().split(" ");
-    if (names.length === 1) return names[0][0].toUpperCase();
-    return (names[0][0] + names[1][0]).toUpperCase();
+  const getInitials = (name, email) => {
+    if (name && name.trim()) {
+      const parts = name.trim().split(" ").filter(Boolean);
+
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+
+      if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+      }
+    }
+
+    if (email) {
+      return email.slice(0, 2).toUpperCase();
+    }
+
+    return "US";
   };
 
-  const getAvatarColor = (name) => {
+  const getAvatarColor = (text) => {
     const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
-    if (!name) return colors[0];
-    let charCodeSum = 0;
-    for (let i = 0; i < name.length; i++) charCodeSum += name.charCodeAt(i);
-    return colors[charCodeSum % colors.length];
+    if (!text) return colors[0];
+
+    let sum = 0;
+    for (let i = 0; i < text.length; i++) {
+      sum += text.charCodeAt(i);
+    }
+
+    return colors[sum % colors.length];
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const userRef = doc(db, "users", user.uid);
-          let userSnap = await getDoc(userRef);
+      if (!user) {
+        setUserName("");
+        setUserEmail("");
+        setProfileImage("");
+        return;
+      }
 
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
-              firstName: user.displayName?.split(" ")[0] || "",
-              lastName: user.displayName?.split(" ")[1] || "",
-              email: user.email || "",
-              profileImage: "",
-              profileImagePath: "",
-              createdAt: new Date()
-            });
-            userSnap = await getDoc(userRef);
-          }
+      try {
+        setUserEmail(user.email || "");
 
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
           const data = userSnap.data();
-          setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
-          setProfileImage(data.profileImage || null);
-          setProfileImagePath(data.profileImagePath || null);
-        } catch (error) {
-          console.error("Fetch/create user error:", error);
+
+          const fullName =
+            `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
+            data.name ||
+            user.displayName ||
+            user.email ||
+            "User";
+
+          setUserName(fullName);
+          setProfileImage(data.profileImage || "");
+        } else {
+          const displayName = user.displayName || "";
+          const parts = displayName.trim().split(" ").filter(Boolean);
+
+          const newUserData = {
+            firstName: parts[0] || "",
+            lastName: parts.slice(1).join(" ") || "",
+            email: user.email || "",
+            profileImage: "",
+            createdAt: serverTimestamp()
+          };
+
+          await setDoc(userRef, newUserData);
+
+          setUserName(`${newUserData.firstName} ${newUserData.lastName}`.trim() || user.email || "User");
+          setProfileImage("");
         }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     });
 
@@ -74,47 +112,61 @@ const Sidebar = () => {
   }, []);
 
   const handleImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const file = e.target.files[0];
+  if (!file) return;
 
+  const user = auth.currentUser;
+  if (!user) {
+    alert("User not logged in");
+    return;
+  }
+
+  try {
+    setUploading(true);
+
+    console.log("Step 1: file selected");
+
+    const imageRef = ref(storage, `profileImages/${user.uid}_${Date.now()}`);
+
+    console.log("Step 2: uploading...");
+    await uploadBytes(imageRef, file);
+
+    console.log("Step 3: getting URL...");
+    const downloadURL = await getDownloadURL(imageRef);
+
+    console.log("Step 4: URL =", downloadURL);
+
+    await setDoc(
+      doc(db, "users", user.uid),
+      {
+        profileImage: downloadURL
+      },
+      { merge: true }
+    );
+
+    console.log("Step 5: Firestore saved");
+
+    setProfileImage(downloadURL);
+
+  } catch (error) {
+    console.error("UPLOAD ERROR:", error);
+    alert(error.message);
+  } finally {
+    setUploading(false);
+  }
+};
+  const handleLogout = async () => {
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const userRef = doc(db, "users", user.uid);
-
-      if (profileImagePath) {
-        try {
-          const oldImageRef = ref(storage, profileImagePath);
-          await deleteObject(oldImageRef);
-        } catch (err) {
-          console.log("Old image not found or already deleted.");
-        }
-      }
-
-      const imageRef = ref(storage, `profileImages/${user.uid}_${Date.now()}`);
-      await uploadBytes(imageRef, file);
-      const downloadURL = await getDownloadURL(imageRef);
-
-      await setDoc(
-        userRef,
-        {
-          profileImage: downloadURL,
-          profileImagePath: imageRef.fullPath
-        },
-        { merge: true }
-      );
-
-      setProfileImage(downloadURL);
-      setProfileImagePath(imageRef.fullPath);
+      await signOut(auth);
+      navigate("/login", { replace: true });
     } catch (error) {
-      console.error("Upload error:", error);
-      alert("Failed to upload image. Please try again.");
+      console.error("Logout error:", error);
+      alert("Failed to logout");
     }
   };
 
   const employeeActive =
-    location.pathname === "/Employee" ||
+    location.pathname === "/employee" ||
     location.pathname.startsWith("/employee-profile");
 
   return (
@@ -125,70 +177,66 @@ const Sidebar = () => {
 
       <ul className="sidebar-menu">
         <NavLink
-          to="/Dashboard"
+          to="/dashboard"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaThLarge className="menu-icon" /> Dashboard
         </NavLink>
 
         <NavLink
-          to="/Employee"
+          to="/employee"
           className={employeeActive ? "nav-item active" : "nav-item"}
         >
           <FaUsers className="menu-icon" /> Employees
         </NavLink>
 
         <NavLink
-          to="/Attendance"
+          to="/attendance"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaCalendarCheck className="menu-icon" /> Attendance
         </NavLink>
 
         <NavLink
-          to="/Leave"
+          to="/leave"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaCalendarAlt className="menu-icon" /> Leave
         </NavLink>
 
         <NavLink
-          to="/Payroll"
+          to="/payroll"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaWallet className="menu-icon" /> Payroll
         </NavLink>
 
         <NavLink
-          to="/Report"
+          to="/report"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaChartBar className="menu-icon" /> Reports
         </NavLink>
 
-        <NavLink
-          to="/Login"
-          className={({ isActive }) => (isActive ? "logout-item active" : "logout-item")}
-        >
+        <button type="button" onClick={handleLogout} className="logout-item">
           <FaSignOutAlt className="menu-icon" /> LogOut
-        </NavLink>
+        </button>
       </ul>
 
       <div className="sidebar-profile">
-        <label htmlFor="profileUpload">
+        <label htmlFor="profileUpload" className="profile-upload-label">
           {profileImage ? (
             <img
               src={profileImage}
               alt="profile"
               className="profile-img"
-              onError={() => setProfileImage(null)}
             />
           ) : (
             <div
               className="profile-initials"
-              style={{ backgroundColor: getAvatarColor(userName) }}
+              style={{ backgroundColor: getAvatarColor(userName || userEmail) }}
             >
-              {getInitials(userName)}
+              {getInitials(userName, userEmail)}
             </div>
           )}
         </label>
@@ -201,8 +249,9 @@ const Sidebar = () => {
           style={{ display: "none" }}
         />
 
-        <div>
-          <h4>{userName || "Loading..."}</h4>
+        <div className="profile-info">
+          <h4>{userName || userEmail || "Loading..."}</h4>
+          <p>{uploading ? "Uploading..." : "Click photo to change"}</p>
         </div>
       </div>
     </div>

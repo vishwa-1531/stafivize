@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "../css/Employee.css";
 import "../css/Sidebar.css";
+import "../css/Topbar.css";
+import Topbar from "./Topbar";
 import Sidebar from "./Sidebar";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaEllipsisV } from "react-icons/fa";
@@ -59,7 +61,20 @@ const Employee = () => {
       <Sidebar />
 
       <div className="employee-content">
+         <Topbar
+  mainTitle="EMPLOYEE"
+  section="DIRECTORY"
+  notifications={[
+    { id: "1", text: `${employees.length} employees loaded` }
+  ]}
+  helpItems={[
+    "View all employees.",
+    "Search by name, role, or department.",
+    "Open employee profile for more details."
+  ]}
+/>
         <div className="employee-topbar">
+         
           <div className="employee-topbar-left">
             <h2>Employee Activity</h2>
             <p>Real-time presence and directory management.</p>
@@ -153,23 +168,36 @@ const Employee = () => {
                   <td colSpan="6">No employees found</td>
                 </tr>
               ) : (
-                filteredEmployees.map((emp) => (
-                  <tr key={emp.id}>
-                    <td>{emp.name || "-"}</td>
-                    <td>{emp.department || "-"}</td>
-                    <td>{emp.role || "-"}</td>
-                    <td>{emp.status || "-"}</td>
-                    <td>{emp.joinDate || "-"}</td>
-                    <td className="menu-cell">
-                      <button
-                        className="dots-btn"
-                        onClick={() => handleOpenProfile(emp.id)}
-                      >
-                        <FaEllipsisV className="dots-icon" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+filteredEmployees.map((emp) => (
+  <tr key={emp.id}>
+    <td>{emp.name || "-"}</td>
+    <td>{emp.department || "-"}</td>
+    <td>{emp.role || "-"}</td>
+
+    <td className="status-cell">
+      <div className="status-cell-inner">
+        <span
+          className={`status-badge ${
+            emp.status === "DeActive" ? "status-DeActive" : "status-Active"
+          }`}
+        >
+          {emp.status || "DeActive"}
+        </span>
+      </div>
+    </td>
+
+    <td>{emp.joinDate || "-"}</td>
+
+    <td className="menu-cell">
+      <button
+        className="dots-btn"
+        onClick={() => handleOpenProfile(emp.id)}
+      >
+        <FaEllipsisV className="dots-icon" />
+      </button> 
+    </td>
+  </tr>
+))
               )}
             </tbody>
           </table>
