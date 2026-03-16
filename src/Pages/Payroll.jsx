@@ -87,7 +87,16 @@ const Payroll = () => {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
+const formatDate = (value) => {
+  const date = normalizeDate(value);
+  if (!date) return "-";
 
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+};
   const getEmployeeName = (item, employee) => {
     if (item.employeeName) return item.employeeName;
     if (!employee) return "Unknown Employee";
@@ -230,23 +239,24 @@ const Payroll = () => {
     document.body.removeChild(link);
   };
 
-  const runPayroll = async () => {
-    try {
-      const updates = filtered.map(async (emp) => {
-        if (String(emp.status).toLowerCase() !== "processed") {
-          const ref = doc(db, "payroll", emp.id);
-          await updateDoc(ref, {
-            status: "Processed"
-          });
-        }
-      });
+ const runPayroll = async () => {
+  try {
+    const updates = filtered.map(async (emp) => {
+      if (String(emp.status).toLowerCase() !== "processed") {
+        const ref = doc(db, "payroll", emp.id);
+        await updateDoc(ref, {
+          status: "Processed",
+          paidAt: new Date()
+        });
+      }
+    });
 
-      await Promise.all(updates);
-      alert("Payroll processed successfully");
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    await Promise.all(updates);
+    alert("Payroll processed successfully");
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const today = new Date();
 
@@ -408,6 +418,7 @@ const Payroll = () => {
             <thead>
               <tr>
                 <th>Employee</th>
+                <th>Paid On</th>
                 <th>Base Salary</th>
                 <th>Bonuses</th>
                 <th>Deductions</th>
@@ -416,59 +427,68 @@ const Payroll = () => {
               </tr>
             </thead>
 
-            <tbody>
-              {filtered.length > 0 ? (
-                filtered.map((emp) => {
-                  const net =
-                    Number(emp.baseSalary || 0) +
-                    Number(emp.bonus || 0) -
-                    Number(emp.deduction || 0);
+           <tbody>
+  {filtered.length > 0 ? (
+    filtered.map((emp) => {
+      const net =
+        Number(emp.baseSalary || 0) +
+        Number(emp.bonus || 0) -
+        Number(emp.deduction || 0);
 
-                  return (
-                    <tr key={emp.id}>
-                      <td className="employee-cell">
-                        {emp.avatar ? (
-                          <img src={emp.avatar} alt={emp.employeeName} />
-                        ) : (
-                          <div className="payroll-avatar-fallback">
-                            {getInitials(emp.employeeName)}
-                          </div>
-                        )}
+      return (
+        <tr key={emp.id}>
+          <td className="employee-cell">
+            {emp.avatar ? (
+              <img src={emp.avatar} alt={emp.employeeName} />
+            ) : (
+              <div className="payroll-avatar-fallback">
+                {getInitials(emp.employeeName)}
+              </div>
+            )}
 
-                        <div>
-                          <p>{emp.employeeName}</p>
-                          <span>{emp.role}</span>
-                        </div>
-                      </td>
+            <div>
+              <p>{emp.employeeName}</p>
+              <span>{emp.role}</span>
+            </div>
+          </td>
 
-                      <td>₹{Number(emp.baseSalary || 0).toLocaleString()}</td>
+          <td>
+            {formatDate(
+              emp.paidAt ||
+              emp.salaryDate ||
+              emp.paymentDate ||
+              emp.createdAt
+            )}
+          </td>
 
-                      <td className="bonus">
-                        ₹{Number(emp.bonus || 0).toLocaleString()}
-                      </td>
+          <td>₹{Number(emp.baseSalary || 0).toLocaleString()}</td>
 
-                      <td className="deduction">
-                        ₹{Number(emp.deduction || 0).toLocaleString()}
-                      </td>
+          <td className="bonus">
+            ₹{Number(emp.bonus || 0).toLocaleString()}
+          </td>
 
-                      <td>₹{net.toLocaleString()}</td>
+          <td className="deduction">
+            ₹{Number(emp.deduction || 0).toLocaleString()}
+          </td>
 
-                      <td>
-                        <span className={`status ${String(emp.status).toLowerCase()}`}>
-                          {emp.status}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
-                    No payroll records found
-                  </td>
-                </tr>
-              )}
-            </tbody>
+          <td>₹{net.toLocaleString()}</td>
+
+          <td>
+            <span className={`status ${String(emp.status).toLowerCase()}`}>
+              {emp.status}
+            </span>
+          </td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan="7" style={{ textAlign: "center", padding: "20px" }}>
+        No payroll records found
+      </td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
       </div>

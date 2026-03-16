@@ -326,6 +326,7 @@ const Attendance = () => {
 
     return `${words[0][0]}${words[1][0]}`.toUpperCase();
   };
+  
 
   return (
     <div className="attendance-layout">
@@ -545,7 +546,14 @@ const Attendance = () => {
                       </span>
                     </td>
 
-                    <td>•••</td>
+                    <td className="action-cell">
+  <button
+    className="action-btn"
+    onClick={() => alert(`Employee ID: ${item.employeeId}`)}
+  >
+    •••
+  </button>
+</td>
                   </tr>
                 ))
               )}

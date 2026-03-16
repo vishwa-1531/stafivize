@@ -466,3 +466,68 @@
   cursor:pointer;
 
   }
+/* ===== Fix Status + Action alignment ===== */
+
+.attendance-table-container th:nth-child(6),
+.attendance-table-container td:nth-child(6) {
+  width: 120px;
+  text-align: center;
+}
+
+.attendance-table-container th:nth-child(7),
+.attendance-table-container td:nth-child(7) {
+  width: 80px;
+  text-align: center;
+}
+
+.action-cell {
+  text-align: center;
+  position: relative;
+}
+
+.action-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 18px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.action-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.action-menu {
+  position: absolute;
+  top: 32px;
+  right: 0;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  min-width: 120px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.action-menu button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.action-menu button:hover {
+  background: #1e293b;
+}
