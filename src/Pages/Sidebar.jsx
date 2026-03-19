@@ -14,7 +14,7 @@ import {
 } from "react-icons/fa";
 
 import { auth, db, storage } from "../firebase";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 
@@ -87,20 +87,7 @@ const Sidebar = () => {
           setUserName(fullName);
           setProfileImage(data.profileImage || "");
         } else {
-          const displayName = user.displayName || "";
-          const parts = displayName.trim().split(" ").filter(Boolean);
-
-          const newUserData = {
-            firstName: parts[0] || "",
-            lastName: parts.slice(1).join(" ") || "",
-            email: user.email || "",
-            profileImage: "",
-            createdAt: serverTimestamp()
-          };
-
-          await setDoc(userRef, newUserData);
-
-          setUserName(`${newUserData.firstName} ${newUserData.lastName}`.trim() || user.email || "User");
+          setUserName(user.displayName || user.email || "User");
           setProfileImage("");
         }
       } catch (error) {
@@ -112,51 +99,42 @@ const Sidebar = () => {
   }, []);
 
   const handleImageChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const user = auth.currentUser;
-  if (!user) {
-    alert("User not logged in");
-    return;
-  }
+    const user = auth.currentUser;
+    if (!user) {
+      alert("User not logged in");
+      return;
+    }
 
-  try {
-    setUploading(true);
+    try {
+      setUploading(true);
 
-    console.log("Step 1: file selected");
+      const imageRef = ref(storage, `profileImages/${user.uid}_${Date.now()}`);
+      await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(imageRef);
 
-    const imageRef = ref(storage, `profileImages/${user.uid}_${Date.now()}`);
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          profileImage: downloadURL
+        },
+        { merge: true }
+      );
 
-    console.log("Step 2: uploading...");
-    await uploadBytes(imageRef, file);
+      setProfileImage(downloadURL);
+    } catch (error) {
+      console.error("UPLOAD ERROR:", error);
+      alert(error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
-    console.log("Step 3: getting URL...");
-    const downloadURL = await getDownloadURL(imageRef);
-
-    console.log("Step 4: URL =", downloadURL);
-
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        profileImage: downloadURL
-      },
-      { merge: true }
-    );
-
-    console.log("Step 5: Firestore saved");
-
-    setProfileImage(downloadURL);
-
-  } catch (error) {
-    console.error("UPLOAD ERROR:", error);
-    alert(error.message);
-  } finally {
-    setUploading(false);
-  }
-};
   const handleLogout = async () => {
     try {
+      sessionStorage.removeItem("selectedRole");
       await signOut(auth);
       navigate("/login", { replace: true });
     } catch (error) {
@@ -250,7 +228,7 @@ const Sidebar = () => {
         />
 
         <div className="profile-info">
-          <h4>{userName || userEmail || "Loading..."}</h4>
+          <h4>{userName || "Loading..."}</h4>
           <p>{uploading ? "Uploading..." : "Click photo to change"}</p>
         </div>
       </div>

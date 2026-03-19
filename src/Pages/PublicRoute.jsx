@@ -14,11 +14,21 @@ const PublicRoute = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // ✅ FIX: show loading instead of null
   if (user === undefined) {
-    return null;
+    return <div style={{ textAlign: "center", marginTop: "100px" }}>Loading...</div>;
   }
 
-  return user ? <Navigate to="/Dashboard" replace /> : children;
-};
+  if (user) {
+    const selectedRole = sessionStorage.getItem("selectedRole");
 
+    if (selectedRole === "Admin") {
+      return <Navigate to="/Dashboard" replace />;
+    } else if (selectedRole === "Employee") {
+      return <Navigate to="/EmployeeDashboard" replace />;
+    }
+  }
+
+  return children;
+};
 export default PublicRoute;

@@ -2,8 +2,16 @@ import React, { useState } from "react";
 import "../css/Login.css";
 import logo from "../image/logo.png";
 import { useNavigate, Link } from "react-router-dom";
-
-import { auth } from "../firebase";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  limit,
+  doc,
+  getDoc
+} from "firebase/firestore";
+import { db, auth } from "../firebase";
 import {
   signInWithEmailAndPassword,
   setPersistence,
@@ -15,19 +23,65 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState("Employee");
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      sessionStorage.removeItem("selectedRole");
 
-      console.log("Login Success");
-      navigate("/Dashboard", { replace: true });
+      // 1. Check user role in Firestore BEFORE login
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", email), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        alert("User record not found");
+        return;
+      }
+
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      if (!userData.role) {
+        alert("Role not found for this user");
+        return;
+      }
+
+      if (userData.role !== role) {
+        alert(`This account is registered as ${userData.role}, not ${role}`);
+        return;
+      }
+
+      // 2. Only if role is correct, then sign in
+      await setPersistence(auth, browserLocalPersistence);
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+
+      // 3. Optional double-check by uid doc
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        alert("User record not found");
+        return;
+      }
+
+      sessionStorage.setItem("selectedRole", role);
+
+      if (role === "Admin") {
+        navigate("/Dashboard", { replace: true });
+      } else if (role === "Employee") {
+        navigate("/EmployeeDashboard", { replace: true });
+      }
     } catch (error) {
-      console.log(error.message);
       alert(error.message);
     }
   };
@@ -52,32 +106,15 @@ function Login() {
           <h3>Login To Your Account</h3>
 
           <form className="login-form" onSubmit={handleLogin} autoComplete="off">
-            <input
-              type="text"
-              name="fake_username"
-              autoComplete="username"
-              style={{ display: "none" }}
-            />
-
-            <input
-              type="password"
-              name="fake_password"
-              autoComplete="new-password"
-              style={{ display: "none" }}
-            />
-
             <div className="login-row">
               <div className="login-field">
                 <label>E-mail Address</label>
-               <input
-                type="email"
-                name="login_email_field"
-               autoComplete="off"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-               />
-
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
             </div>
 
@@ -86,8 +123,6 @@ function Login() {
                 <label>Password</label>
                 <input
                   type="password"
-                  name="login_password_field"
-                  autoComplete="new-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -100,15 +135,11 @@ function Login() {
                 <label className="login-label">Role</label>
                 <select
                   className="login-select"
-                  id="role-select"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                 >
-                  <option value="" disabled hidden>
-                    Choose Role
-                  </option>
-                  <option value="Admin">Admin</option>
                   <option value="Employee">Employee</option>
+                  <option value="Admin">Admin</option>
                 </select>
               </div>
             </div>

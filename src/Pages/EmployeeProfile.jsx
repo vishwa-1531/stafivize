@@ -307,17 +307,7 @@ const EmployeeProfile = () => {
                     <div className="profile-meta">
                       <span>
                         <FaEnvelope />
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            name="email"
-                            value={formData.email || ""}
-                            onChange={handleChange}
-                            className="profile-inline-input"
-                          />
-                        ) : (
-                          employee.email || "-"
-                        )}
+                       {employee.email || "-"}
                       </span>
 
                       <span>

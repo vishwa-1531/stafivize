@@ -17,7 +17,7 @@ const Employee = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDept, setFilterDept] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterRole, setFilterRole] = useState("");
+  const [filterdesignation, setFilterdesignation] = useState("");
 
   const handleOpenProfile = (employeeId) => {
     navigate(`/employee-profile/${employeeId}`);
@@ -44,7 +44,7 @@ const Employee = () => {
         (emp.email || "").toLowerCase().includes(searchTerm.toLowerCase())) &&
       (filterDept ? emp.department === filterDept : true) &&
       (filterStatus ? emp.status === filterStatus : true) &&
-      (filterRole ? emp.role === filterRole : true)
+      (filterdesignation ? emp.designation === filterdesignation : true)
     );
   });
 
@@ -54,7 +54,7 @@ const Employee = () => {
   const statuses = [
     ...new Set(employees.map((emp) => emp.status).filter(Boolean)),
   ];
-  const roles = [...new Set(employees.map((emp) => emp.role).filter(Boolean))];
+  const designation = [...new Set(employees.map((emp) => emp.designation).filter(Boolean))];
 
   return (
     <div className="employee-layout">
@@ -132,13 +132,13 @@ const Employee = () => {
 
             <select
               className="filter-select"
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
+              value={filterdesignation}
+              onChange={(e) => setFilterdesignation(e.target.value)}
             >
-              <option value="">Role</option>
-              {roles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
+              <option value="">Designation</option>
+              {designation.map((designation) => (
+                <option key={designation} value={designation}>
+                  {designation}
                 </option>
               ))}
             </select>
@@ -151,7 +151,7 @@ const Employee = () => {
               <tr>
                 <th>EMPLOYEE</th>
                 <th>DEPARTMENT</th>
-                <th>ROLE</th>
+                <th>Designation</th>
                 <th>STATUS</th>
                 <th>JOIN DATE</th>
                 
@@ -172,7 +172,7 @@ filteredEmployees.map((emp) => (
   <tr key={emp.id}>
     <td>{emp.name || "-"}</td>
     <td>{emp.department || "-"}</td>
-    <td>{emp.role || "-"}</td>
+    <td>{emp.designation|| "-"}</td>
 
     <td className="status-cell">
       <div className="status-cell-inner">
