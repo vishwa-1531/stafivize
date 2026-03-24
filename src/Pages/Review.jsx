@@ -2,10 +2,12 @@ import React from "react";
 import "../css/Review.css";
 import { FaCheckCircle, FaArrowRight, FaArrowLeft, FaEdit } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
-import { setDoc, doc, addDoc, collection } from "firebase/firestore";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { setDoc, doc, getDocs, collection,updateDoc ,getDoc} from "firebase/firestore";
+import { createUserWithEmailAndPassword,signOut } from "firebase/auth";
 import { db, auth } from "../firebase";
 import logo from "../image/logo.png";
+
+
 
 const Review = () => {
   const navigate = useNavigate();
@@ -15,79 +17,120 @@ const Review = () => {
   const handlePrevious = () => {
     navigate("/Admin", { state: data });
   };
+  
+const generateUserId = async () => {
+  const counterRef = doc(db, "counters", "userCounter");
+  const counterSnap = await getDoc(counterRef);
+
+  let newId = 1;
+
+  if (counterSnap.exists()) {
+    const lastId = counterSnap.data().lastId;
+    newId = lastId + 1;
+    await updateDoc(counterRef, { lastId: newId });
+  } else {
+    await setDoc(counterRef, { lastId: newId });
+  }
+
+  return `USER-${String(newId).padStart(3, "0")}`;
+};
 
   const handleFinish = async () => {
-    try {
-      if (!data.email || !data.password) {
-        alert("Email or password is missing");
-        return;
-      }
-
-      
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-
-      const user = userCredential.user;
-
-      
-      const companyData = {
-        companyName: data.companyName,
-        companyWebsite: data.companyWebsite,
-        industry: data.industry,
-        companySize: data.companySize,
-        createdAt: new Date()
-      };
-
-      const companyRef = await addDoc(collection(db, "companies"), companyData);
-
-      
-      const adminData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        jobTitle: data.jobTitle,
-        idType: data.idType,
-        idNumber: data.idNumber,
-        companyId: companyRef.id,
-        createdAt: new Date()
-      };
-
-      const adminRef = await addDoc(collection(db, "adminDetails"), adminData);
-
-      
-      await setDoc(
-        doc(db, "companies", companyRef.id),
-        {
-          ...companyData,
-          adminId: adminRef.id
-        },
-        { merge: true }
-      );
-
-      
-      await setDoc(doc(db, "users", user.uid), {
-        email: data.email,
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        role: "Admin",
-        companyId: companyRef.id,
-        adminId: adminRef.id,
-        profileImage: "",
-        createdAt: new Date()
-      });
-
-      alert("Registration Completed Successfully");
-      navigate("/Login");
-    } catch (error) {
-      console.error("Error saving data:", error);
-      alert(error.message || "Error saving data");
+  try {
+    if (!data.email || !data.password) {
+      alert("Email or password is missing");
+      return;
     }
-  };
+    
+   
+    const companySnapshot = await getDocs(collection(db, "companies"));
+    let maxCompany = 0;
 
+    companySnapshot.forEach((doc) => {
+      const id = doc.data().companyId;
+      if (id) {
+        const num = parseInt(id.split("-")[1]);
+        if (num > maxCompany) maxCompany = num;
+      }
+    });
+
+    const companyId = `CMP-${String(maxCompany + 1).padStart(3, "0")}`;
+
+    
+    const adminSnapshot = await getDocs(collection(db, "users"));
+    let maxAdmin = 0;
+
+    adminSnapshot.forEach((doc) => {
+      const id = doc.data().adminId;
+      if (id) {
+        const num = parseInt(id.split("-")[1]);
+        if (num > maxAdmin) maxAdmin = num;
+      }
+    });
+
+    const adminId = `ADM-${String(maxAdmin + 1).padStart(3, "0")}`;
+
+   
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      data.email,
+      data.password
+    );
+
+    const user = userCredential.user;
+    const customUserId = await generateUserId();
+
+    
+    await setDoc(doc(db, "companies", companyId), {
+      companyId,
+      companyName: data.companyName,
+      companyWebsite: data.companyWebsite,
+      industry: data.industry,
+      companySize: data.companySize,
+      adminId,
+      createdAt: new Date()
+    });
+      await signOut(auth);
+   
+    await setDoc(doc(db, "adminDetails", adminId), {
+      adminId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      jobTitle: data.jobTitle,
+      idType: data.idType,
+      idNumber: data.idNumber,
+      companyId,
+      createdAt: new Date()
+    });
+
+   
+    await setDoc(doc(db, "users", customUserId), {
+      userId: customUserId,
+      uid: user.uid,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: "Admin",
+      companyId,
+      adminId,
+      createdAt: new Date()
+    });
+
+    
+    sessionStorage.setItem("companyId", companyId);
+    sessionStorage.setItem("adminId", adminId);
+
+    alert(`Registration Successful \nCompany ID: ${companyId}`);
+
+    navigate("/Login");
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+};
   return (
     <div className="review-header">
       <div className="review-header-top">

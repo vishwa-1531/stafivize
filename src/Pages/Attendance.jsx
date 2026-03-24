@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState ,useCallback} from "react";
 import { FaCheck, FaClock, FaTimes, FaDownload, FaCalendarAlt } from "react-icons/fa";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
@@ -20,6 +20,7 @@ const Attendance = () => {
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
+  
 
   useEffect(() => {
     const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
@@ -53,7 +54,43 @@ const Attendance = () => {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
+const getStatus = useCallback((checkIn) => {
+  if (!checkIn) return "Absent";
 
+    let dateObj;
+
+  
+  if (checkIn?.toDate) {
+    dateObj = checkIn.toDate();
+  } else if (checkIn instanceof Date) {
+    dateObj = checkIn;
+  } else if (typeof checkIn === "string") {
+    
+    const [time, modifier] = checkIn.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+
+    if (modifier === "PM" && hours !== 12) {
+      hours += 12;
+    }
+    if (modifier === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    dateObj = new Date();
+    dateObj.setHours(hours, minutes, 0);
+  }
+
+  if (!dateObj) return "Absent";
+
+  const hour = dateObj.getHours();
+  const minute = dateObj.getMinutes();
+
+  if (hour > 9 || (hour === 9 && minute > 30)) {
+    return "Late";
+  }
+
+  return "On Time";
+}, []);
   const formatDate = (value) => {
     const date = normalizeDate(value);
     if (!date) return "-";
@@ -166,20 +203,29 @@ const Attendance = () => {
     return map;
   }, [employeeData]);
 
-  const mergedAttendance = useMemo(() => {
-    return attendanceData.map((item) => {
-      const employee = employeeMap[String(item.employeeId || "").trim()] || {};
+ const mergedAttendance = useMemo(() => {
+  return attendanceData.map((item) => {
+    const employee =
+      employeeMap[String(item.employeeId || "").trim()] || {};
 
-      return {
-        ...item,
-        name: employee.name || employee.fullName || "N/A",
-        department: employee.department || "N/A",
-        role: employee.role || "N/A",
-        email: employee.email || "N/A"
-      };
-    });
-  }, [attendanceData, employeeMap]);
+    
+   const checkIn = item.checkIn || item.chceckIn;
+  const checkOut = item.checkOut || item.chceckOut;
+    return {
+      ...item,
+      checkIn,
+      checkOut,
 
+      
+      status: checkIn ? getStatus(checkIn) : "Absent",
+
+      name: employee.name || employee.fullName || "N/A",
+      department: employee.department || "N/A",
+      role: employee.role || "N/A",
+      email: employee.email || "N/A"
+    };
+  });
+}, [attendanceData, employeeMap, getStatus]);
   const departmentOptions = useMemo(() => {
     const depts = mergedAttendance
       .map((item) => item.department)
@@ -263,8 +309,8 @@ const Attendance = () => {
       emp.department || "",
       formatDate(emp.date || emp.attendanceDate || emp.createdAt),
       emp.shift || "",
-      formatTime(emp.clockIn),
-      formatTime(emp.clockOut),
+      formatTime(emp.checkIn),
+      formatTime(emp.checkOut),
       emp.breakDuration || "",
       emp.status || ""
     ]);
@@ -526,8 +572,8 @@ const Attendance = () => {
                     </td>
 
                     <td>{formatDate(item.date || item.attendanceDate || item.createdAt)}</td>
-                    <td>{formatTime(item.clockIn)}</td>
-                    <td>{formatTime(item.clockOut)}</td>
+                    <td>{formatTime(item.checkIn)}</td>
+                    <td>{formatTime(item.checkOut)}</td>
                     <td>{item.breakDuration || "-"}</td>
 
                     <td>

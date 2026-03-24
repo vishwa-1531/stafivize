@@ -11,7 +11,7 @@ const Home = () => {
   return (
     <div className="home">
       
-      {/* Navbar */}
+     
       <nav className="navbar">
         <img src={logo} alt="Logo" className="logo-img" />
 
@@ -28,7 +28,7 @@ const Home = () => {
         </button>
       </nav>
 
-      {/* Hero Section */}
+      
       <section className="hero">
         <div className="hero-left">
           <h1>
@@ -73,7 +73,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features */}
+      
       <section className="features-section">
         <h1>All-in-One Employee Management System</h1>
         <p>
@@ -94,7 +94,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Roles */}
+      
       <section className="roles-section">
         <h1>Built for HR Teams, Employees & Business <br/>
           Owners</h1>
@@ -124,11 +124,11 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Footer */}
+   
       <footer className="footer">
   <div className="footer-container">
     
-    {/* Left Side */}
+    
     <div className="footer-left">
       <img src={FooterLogo} alt="FooterLogo" className="footer-logo" />
       <p className="footer-tagline">
@@ -164,7 +164,7 @@ const Home = () => {
       </div>
     </div>
 
-    {/* Right Side */}
+   
     <div className="footer-right">
       <div className="footer-column">
         <a href="Blog">Blog</a>

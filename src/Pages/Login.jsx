@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect,useState } from "react";
 import "../css/Login.css";
 import logo from "../image/logo.png";
 import { useNavigate, Link } from "react-router-dom";
 import {
+ 
+  getDocs,
   collection,
   query,
-  where,
-  getDocs,
-  limit,
-  doc,
-  getDoc
+  where
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import {
@@ -21,70 +19,92 @@ import {
 function Login() {
   const navigate = useNavigate();
 
+  const [companyId, setCompanyId] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("Employee");
+ const[ rememberMe, setRememberMe] = useState("false");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+ const handleLogin = async (e) => {
+  e.preventDefault();
 
-    try {
-      sessionStorage.removeItem("selectedRole");
+  try {
+    await setPersistence(auth, browserLocalPersistence);
 
-      // 1. Check user role in Firestore BEFORE login
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("email", "==", email), limit(1));
-      const querySnapshot = await getDocs(q);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-      if (querySnapshot.empty) {
-        alert("User record not found");
-        return;
-      }
+    const user = userCredential.user;
 
-      const userDoc = querySnapshot.docs[0];
-      const userData = userDoc.data();
+    
+   const q = query(
+  collection(db, "users"),
+  where("uid", "==", user.uid)
+);
 
-      if (!userData.role) {
-        alert("Role not found for this user");
-        return;
-      }
+const querySnapshot = await getDocs(q);
 
-      if (userData.role !== role) {
-        alert(`This account is registered as ${userData.role}, not ${role}`);
-        return;
-      }
+if (querySnapshot.empty) {
+  alert("User record not found");
+  return;
+}
 
-      // 2. Only if role is correct, then sign in
-      await setPersistence(auth, browserLocalPersistence);
-
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      const user = userCredential.user;
-
-      // 3. Optional double-check by uid doc
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        alert("User record not found");
-        return;
-      }
-
-      sessionStorage.setItem("selectedRole", role);
-
-      if (role === "Admin") {
-        navigate("/Dashboard", { replace: true });
-      } else if (role === "Employee") {
-        navigate("/EmployeeDashboard", { replace: true });
-      }
-    } catch (error) {
-      alert(error.message);
+const userData = querySnapshot.docs[0].data();
+    
+    if (userData.role !== role) {
+      alert(`This account is registered as ${userData.role}`);
+      return;
     }
-  };
+
+    
+    if (userData.companyId.trim() !== companyId.trim()) {
+      console.log("DB:", userData.companyId);
+      console.log("Input:", companyId);
+      alert("Invalid Company ID");
+      return;
+    }
+
+    
+    sessionStorage.setItem("companyId", companyId);
+    sessionStorage.setItem("selectedRole", role);
+    
+if (rememberMe) {
+  localStorage.setItem(
+    "adminLogin",
+    JSON.stringify({
+      email,
+      password,
+      companyId
+    })
+  );
+} else {
+  localStorage.removeItem("adminLogin");
+}
+
+    
+    if (role === "Admin") {
+      navigate("/Dashboard", { replace: true });
+    } else {
+      navigate("/EmployeeDashboard", { replace: true });
+    }
+
+  } catch (error) {
+    alert(error.message);
+  }
+};
+  useEffect(() => {
+   const savedLogin = JSON.parse(localStorage.getItem("adminLogin"));
+
+  if (savedLogin) {
+    setEmail(savedLogin.email || "");
+    setPassword(savedLogin.password || "");
+    setCompanyId(savedLogin.companyId || "");
+     setRememberMe(true); 
+  }
+}, []);
 
   return (
     <div className="login-container">
@@ -106,6 +126,22 @@ function Login() {
           <h3>Login To Your Account</h3>
 
           <form className="login-form" onSubmit={handleLogin} autoComplete="off">
+
+            
+            <div className="login-row">
+              <div className="login-field">
+                <label>Company ID</label>
+                <input
+                  type="text"
+                  required
+                  value={companyId}
+                  placeholder="company Id"
+                  onChange={(e) => setCompanyId(e.target.value)}
+                />
+              </div>
+            </div>
+
+            
             <div className="login-row">
               <div className="login-field">
                 <label>E-mail Address</label>
@@ -118,6 +154,7 @@ function Login() {
               </div>
             </div>
 
+            
             <div className="login-row">
               <div className="login-field">
                 <label>Password</label>
@@ -146,7 +183,11 @@ function Login() {
 
             <div className="login-options">
               <label className="remember">
-                <input type="checkbox" />
+                <input
+  type="checkbox"
+  checked={rememberMe}
+  onChange={(e) => setRememberMe(e.target.checked)}
+/>
                 <span>Remember me</span>
               </label>
 

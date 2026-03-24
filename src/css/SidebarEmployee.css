@@ -1,0 +1,162 @@
+.sidebaremployee {
+width: 260px;
+min-height: 100vh;
+background: #1e293b;
+padding: 10px 20px;
+display: flex;
+flex-direction: column;
+color: white;
+overflow: hidden;
+}
+
+/* Logo */
+
+.sidebaremployee-header {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-bottom: 30px;
+}
+
+.logo-img {
+width: 120px;
+}
+
+/* Menu */
+
+.sidebaremployee-menu {
+list-style: none;
+padding: 0;
+margin-bottom: 20px;
+flex: 1;
+}
+
+.nav-item {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 12px 14px;
+margin-bottom: 10px;
+border-radius: 10px;
+text-decoration: none;
+color: #94a3b8;
+transition: 0.3s ease;
+}
+
+.nav-item:hover {
+background: #334155;
+color: white;
+}
+
+.nav-item.active {
+background-color: #2563eb;
+color: white;
+font-weight: 600;
+}
+
+.nav-item.active .menu-icon {
+color: white;
+}
+
+.menu-icon {
+font-size: 16px;
+}
+
+/* Logout */
+
+/* Logout */
+
+.logout-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-decoration: none;
+  color: #f87171;
+  cursor: pointer;
+  transition: 0.3s ease;
+  font: inherit;
+  text-align: left;
+}
+
+.logout-item:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+.logout-item .menu-icon {
+  font-size: 16px;
+}
+
+/* Profile Section */
+
+.sidebaremployee-profile {
+display: flex;
+align-items: center;
+gap: 12px;
+background: #334155;
+padding: 12px;
+border-radius: 12px;
+}
+
+.sidebaremployee-profile div {
+display: flex;
+flex-direction: column;
+}
+
+/* Profile Image */
+
+.profile-img {
+width: 50px;
+height: 50px;
+border-radius: 50%;
+cursor: pointer;
+object-fit: cover;
+border: 2px solid #3b82f6;
+transition: all 0.3s ease;
+}
+
+.profile-img:hover {
+opacity: 0.85;
+transform: scale(1.05);
+}
+
+/* Initial Avatar */
+
+.profile-initials {
+width: 50px;
+height: 50px;
+border-radius: 50%;
+background-color: #3b82f6;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: clamp(14px, 4vw, 18px);
+font-weight: 600;
+color: white;
+cursor: pointer;
+transition: 0.3s ease;
+}
+
+.profile-initials:hover {
+opacity: 0.85;
+transform: scale(1.05);
+}
+
+.sidebaremployee-profile h4 {
+font-size: 14px;
+margin: 0;
+font-weight: 500;
+}
+
+.sidebaremployee-profile p {
+font-size: 12px;
+color: #94a3b8;
+margin: 0;
+}

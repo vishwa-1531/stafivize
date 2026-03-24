@@ -23,12 +23,16 @@ const AddEmp = () => {
     email: "",
     password: "",
     department: "",
+    designation: "",
     status: "Active",
     joinDate: ""
   });
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  // ✅ GET COMPANY ID (MAIN FIX)
+  const companyId = sessionStorage.getItem("companyId");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,7 +42,6 @@ const AddEmp = () => {
     }));
   };
 
-  // ✅ Generate EMP-001 style ID (NO duplicate)
   const generateEmployeeId = async () => {
     const snapshot = await getDocs(collection(db, "employee"));
 
@@ -61,7 +64,8 @@ const AddEmp = () => {
     setMessage("");
 
     try {
-      const employeeId = await generateEmployeeId(); 
+      const employeeId = await generateEmployeeId();
+
       const name = formData.name.trim();
       const email = formData.email.trim();
       const password = formData.password;
@@ -72,13 +76,18 @@ const AddEmp = () => {
       const joinDate = formData.joinDate;
 
       
-      if (!name || !email || !password || !department || ! designation|| !joinDate) {
+      if (!name || !email || !password || !department || !designation || !joinDate) {
         setMessage("Please fill all required fields");
         setLoading(false);
         return;
       }
 
-      
+      if (!companyId) {
+        setMessage("Company ID missing. Please login again.");
+        setLoading(false);
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         secondaryAuth,
         email,
@@ -98,6 +107,7 @@ const AddEmp = () => {
         role,
         status,
         joinDate,
+        companyId, 
         createdAt: serverTimestamp()
       });
 
@@ -107,26 +117,26 @@ const AddEmp = () => {
         name,
         email,
         role,
+        companyId, 
         createdAt: serverTimestamp()
       });
 
-      setMessage(`Employee added successfully ✅ (${employeeId})`);
+      setMessage(`Employee added successfully  (${employeeId})`);
 
-      
       setFormData({
         name: "",
         email: "",
         password: "",
         department: "",
-        designation :"",
+        designation: "",
         status: "Active",
         joinDate: ""
       });
 
-      // ✅ Redirect
       setTimeout(() => {
         navigate("/employee");
       }, 1000);
+
     } catch (error) {
       console.error("Error adding employee:", error);
 
@@ -182,8 +192,6 @@ const AddEmp = () => {
         <div className="table-container" style={{ padding: "24px" }}>
           <form className="add-employee-form" onSubmit={handleAddEmployee}>
             <div className="form-grid">
-
-            
 
               <input
                 type="text"

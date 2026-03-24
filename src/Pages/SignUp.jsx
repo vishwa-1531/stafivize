@@ -8,12 +8,12 @@ import { FaArrowRight } from "react-icons/fa";
 const SignUp = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const initialData = location.state || {}; // data passed from Review.jsx
+  const initialData = location.state || {}; 
 
   const documentRef = useRef(null);
   const logoRef = useRef(null);
 
-  // ===== Company Information =====
+  
   const [companyName, setCompanyName] = useState(initialData.companyName || "");
   const [companyWebsite, setCompanyWebsite] = useState(initialData.companyWebsite || "");
   const [industry, setIndustry] = useState(initialData.industry || "");
@@ -22,24 +22,24 @@ const SignUp = () => {
   const [taxId, setTaxId] = useState(initialData.taxId || "");
   const [yearEstablished, setYearEstablished] = useState(initialData.yearEstablished || "");
 
-  // ===== Address =====
+  
   const [streetAddress, setStreetAddress] = useState(initialData.streetAddress || "");
   const [city, setCity] = useState(initialData.city || "");
   const [stateProvince, setStateProvince] = useState(initialData.stateProvince || "");
   const [country, setCountry] = useState(initialData.country || "");
   const [zipCode, setZipCode] = useState(initialData.zipCode || "");
 
-  // ===== Contact =====
+  
   const [companyPhone, setCompanyPhone] = useState(initialData.companyPhone || "");
   const [secondaryEmail, setSecondaryEmail] = useState(initialData.secondaryEmail || "");
 
-  // ===== Uploads =====
+  
   const [documentName, setDocumentName] = useState(initialData.documentName || "");
   const [logoName, setLogoName] = useState(initialData.logoName || "");
-  const [documentFile, setDocumentFile] = useState(null); // files can't be prefilled
+  const [documentFile, setDocumentFile] = useState(null); 
   const [logoFile, setLogoFile] = useState(null);
 
-  // ===== Step Detection =====
+  
   const getStep = () => {
     if (location.pathname === "/SignUp") return 1;
     if (location.pathname === "/Admin") return 2;
@@ -63,7 +63,7 @@ const SignUp = () => {
   const handleContinue = (e) => {
     e.preventDefault();
 
-    // ===== Validation =====
+    
     if (!companyName || !companyWebsite || !industry || !companySize) {
       alert("Please fill all required company details");
       return;
@@ -79,7 +79,7 @@ const SignUp = () => {
       return;
     }
 
-    // Prepare data to send to Admin page
+    
     const companyData = {
       companyName,
       companyWebsite,
@@ -141,7 +141,7 @@ const SignUp = () => {
           </p>
 
           <form onSubmit={handleContinue}>
-            {/* Company Info Grid */}
+           
             <div className="Signupform-grid">
               <div className="Signupform-group">
                 <label>Company Name <span className="required">*</span></label>
@@ -185,7 +185,7 @@ const SignUp = () => {
               </div>
             </div>
 
-            {/* Business Description */}
+            
             <div className="Signupform-group full">
               <label>Business Description <span className="required">*</span></label>
               <textarea placeholder="Tell us about your company..."
@@ -195,7 +195,7 @@ const SignUp = () => {
               />
             </div>
 
-            {/* Tax ID & Year Established */}
+          
             <div className="Signupform-grid">
               <div className="Signupform-group">
                 <label>Tax ID / Business Registration Number <span className="required">*</span></label>
@@ -216,7 +216,7 @@ const SignUp = () => {
               </div>
             </div>
 
-            {/* Address */}
+           
             <h3>Company Address</h3>
             <div className="Signupform-group full">
               <label>Street Address <span className="required">*</span></label>
@@ -267,7 +267,7 @@ const SignUp = () => {
               </div>
             </div>
 
-            {/* Contact Info */}
+            
             <h3>Contact Information</h3>
             <div className="contact-row">
               <div className="Signupform-group">
@@ -298,7 +298,7 @@ const SignUp = () => {
               </div>
             </div>
 
-            {/* Document Upload */}
+           
             <h3>Document Upload</h3>
             <div className="Signupupload-grid">
               <div className="Signupupload-box" onClick={() => documentRef.current.click()}>

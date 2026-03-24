@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -17,31 +17,29 @@ const ProtectedRoute = ({ children, allowedRole }) => {
       }
 
       try {
-        const selectedRole = sessionStorage.getItem("selectedRole");
+        const q = query(
+          collection(db, "users"),
+          where("uid", "==", user.uid)
+        );
 
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const querySnapshot = await getDocs(q);
 
-        if (!userSnap.exists()) {
+        if (querySnapshot.empty) {
           setIsAllowed(false);
           setLoading(false);
           return;
         }
 
-        const userData = userSnap.data();
+        const userData = querySnapshot.docs[0].data();
 
-        // ✅ SAFE CHECK (NO LOOP ISSUE)
-        if (
-          userData.role === allowedRole &&
-          selectedRole &&
-          selectedRole === allowedRole
-        ) {
+        
+        if (userData.role === allowedRole) {
           setIsAllowed(true);
         } else {
           setIsAllowed(false);
         }
       } catch (error) {
-        console.error("ProtectedRoute error:", error);
+        console.error(error);
         setIsAllowed(false);
       } finally {
         setLoading(false);
@@ -51,14 +49,10 @@ const ProtectedRoute = ({ children, allowedRole }) => {
     return () => unsubscribe();
   }, [allowedRole]);
 
-  // ⏳ While checking → show nothing (or loader)
-  if (loading) {
-    return null;
-  }
+  if (loading) return null;
 
-  // ❗ IMPORTANT FIX: prevent loop
   if (!isAllowed) {
-    return <Navigate to="/Login" replace state={{ fromProtected: true }} />;
+    return <Navigate to="/Login" replace />;
   }
 
   return children;

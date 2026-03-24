@@ -6,12 +6,12 @@ import Topbar from "./Topbar";
 import Sidebar from "./Sidebar";
 import { useNavigate } from "react-router-dom";
 import { FaSearch, FaEllipsisV } from "react-icons/fa";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, where } from "firebase/firestore"; // ✅ added where
 import { db } from "../firebase";
 
 const Employee = () => {
   const navigate = useNavigate();
-
+  const [companyId, setCompanyId] = useState("");
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,8 +23,23 @@ const Employee = () => {
     navigate(`/employee-profile/${employeeId}`);
   };
 
+ 
   useEffect(() => {
-    const q = query(collection(db, "employee"), orderBy("joinDate", "desc"));
+    const storedCompanyId = sessionStorage.getItem("companyId");
+    if (storedCompanyId) {
+      setCompanyId(storedCompanyId);
+    }
+  }, []);
+
+  
+  useEffect(() => {
+    if (!companyId) return;
+
+    const q = query(
+      collection(db, "employee"),
+      where("companyId", "==", companyId),
+      orderBy("joinDate", "desc")
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const employeeList = snapshot.docs.map((doc) => ({
@@ -36,7 +51,7 @@ const Employee = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [companyId]);
 
   const filteredEmployees = employees.filter((emp) => {
     return (
@@ -54,27 +69,29 @@ const Employee = () => {
   const statuses = [
     ...new Set(employees.map((emp) => emp.status).filter(Boolean)),
   ];
-  const designation = [...new Set(employees.map((emp) => emp.designation).filter(Boolean))];
+  const designation = [
+    ...new Set(employees.map((emp) => emp.designation).filter(Boolean)),
+  ];
 
   return (
     <div className="employee-layout">
       <Sidebar />
 
       <div className="employee-content">
-         <Topbar
-  mainTitle="EMPLOYEE"
-  section="DIRECTORY"
-  notifications={[
-    { id: "1", text: `${employees.length} employees loaded` }
-  ]}
-  helpItems={[
-    "View all employees.",
-    "Search by name, role, or department.",
-    "Open employee profile for more details."
-  ]}
-/>
+        <Topbar
+          mainTitle="EMPLOYEE"
+          section="DIRECTORY"
+          notifications={[
+            { id: "1", text: `${employees.length} employees loaded` },
+          ]}
+          helpItems={[
+            "View all employees.",
+            "Search by name, role, or department.",
+            "Open employee profile for more details.",
+          ]}
+        />
+
         <div className="employee-topbar">
-         
           <div className="employee-topbar-left">
             <h2>Employee Activity</h2>
             <p>Real-time presence and directory management.</p>
@@ -94,15 +111,15 @@ const Employee = () => {
           <div className="filters-box">
             <span className="filters-title">FILTERS</span>
 
-           <div className="search-box">
-  <FaSearch className="search-icon" />
-  <input
-    type="text"
-    placeholder="Search by name or email..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-  />
-</div>
+            <div className="search-box">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
             <select
               className="filter-select"
@@ -154,7 +171,6 @@ const Employee = () => {
                 <th>Designation</th>
                 <th>STATUS</th>
                 <th>JOIN DATE</th>
-                
               </tr>
             </thead>
 
@@ -168,36 +184,38 @@ const Employee = () => {
                   <td colSpan="6">No employees found</td>
                 </tr>
               ) : (
-filteredEmployees.map((emp) => (
-  <tr key={emp.id}>
-    <td>{emp.name || "-"}</td>
-    <td>{emp.department || "-"}</td>
-    <td>{emp.designation|| "-"}</td>
+                filteredEmployees.map((emp) => (
+                  <tr key={emp.id}>
+                    <td>{emp.name || "-"}</td>
+                    <td>{emp.department || "-"}</td>
+                    <td>{emp.designation || "-"}</td>
 
-    <td className="status-cell">
-      <div className="status-cell-inner">
-        <span
-          className={`status-badge ${
-            emp.status === "DeActive" ? "status-DeActive" : "status-Active"
-          }`}
-        >
-          {emp.status || "DeActive"}
-        </span>
-      </div>
-    </td>
+                    <td className="status-cell">
+                      <div className="status-cell-inner">
+                        <span
+                          className={`status-badge ${
+                            emp.status === "DeActive"
+                              ? "status-DeActive"
+                              : "status-Active"
+                          }`}
+                        >
+                          {emp.status || "DeActive"}
+                        </span>
+                      </div>
+                    </td>
 
-    <td>{emp.joinDate || "-"}</td>
+                    <td>{emp.joinDate || "-"}</td>
 
-    <td className="menu-cell">
-      <button
-        className="dots-btn"
-        onClick={() => handleOpenProfile(emp.id)}
-      >
-        <FaEllipsisV className="dots-icon" />
-      </button> 
-    </td>
-  </tr>
-))
+                    <td className="menu-cell">
+                      <button
+                        className="dots-btn"
+                        onClick={() => handleOpenProfile(emp.id)}
+                      >
+                        <FaEllipsisV className="dots-icon" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

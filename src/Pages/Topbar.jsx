@@ -35,7 +35,7 @@ const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
   setShowNotifications((prev) => !prev);
   setShowHelp(false);
 
-  // when user opens notifications → remove red dot
+  
   setHasUnreadNotifications(false);
 };
 

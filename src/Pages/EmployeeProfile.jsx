@@ -110,6 +110,7 @@ const EmployeeProfile = () => {
         emergencyPhone: formData.emergencyPhone || "",
 
         department: formData.department || "",
+        designation: formData.designation || "",
         jobCategory: formData.jobCategory || "",
         reportsTo: formData.reportsTo || "",
         gender: formData.gender || "",
@@ -284,26 +285,16 @@ const EmployeeProfile = () => {
                       )}
 
                       <span
-  className={`status-badge ${
-    employee.status === "DeActive" ? "status-DeActive" : "status-Active"
+                       className={`status-badge ${
+                         employee.status === "DeActive" ? "status-DeActive" : "status-Active"
   }`}
 >
   {employee.status || "DeActive"}
 </span>
                     </div>
-
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        name="role"
-                        value={formData.role || ""}
-                        onChange={handleChange}
-                        className="profile-role-input"
-                      />
-                    ) : (
-                      <p className="profile-role">{employee.role || "-"}</p>
-                    )}
-
+                   <span>
+                     {employee.role || "Employee"}
+                    </span>
                     <div className="profile-meta">
                       <span>
                         <FaEnvelope />
@@ -352,11 +343,12 @@ const EmployeeProfile = () => {
                     <h3>
                       <FaBriefcase /> Employee info
                     </h3>
-                    <div className="info-list">
-                      {renderField("Department", "department")}
-                      {renderField("Job Category", "jobCategory")}
-                      {renderField("Reports to", "reportsTo")}
-                    </div>
+                   <div className="info-list">
+     
+      {renderField("Department", "department")}
+       {renderField("Designation", "designation")}
+      {renderField("Reports to", "reportsTo")}
+    </div>
                   </div>
 
                   <div className="profile-card">
@@ -582,13 +574,41 @@ const EmployeeProfile = () => {
             {activeSection === "job" && (
               <>
                 <div className="profile-card">
+                  
                   <div className="contact-card-header">
                     <h3>
                       <FaBriefcase /> Job Information
                     </h3>
-                    <span className="status-badge">
-                      {employee.status || "Active"}
-                    </span>
+                     <div className="header-actions">
+                    <span
+                       className={`status-badge ${
+                         employee.status === "DeActive" ? "status-DeActive" : "status-Active"
+  }`}
+>
+  {employee.status || "DeActive"}
+</span>
+                     {!isEditing ? (
+                      <button className="edit-btn" onClick={handleEditToggle}>
+                        <FaUserEdit /> Edit
+                      </button>
+                    ) : (
+                      <div className="profile-action-buttons">
+                        <button
+                          className="save-profile-btn"
+                          onClick={handleSave}
+                          disabled={saving}
+                        >
+                          <FaSave /> {saving ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          className="cancel-profile-btn"
+                          onClick={handleCancel}
+                        >
+                          <FaTimes /> Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   </div>
 
                   <div className="contact-grid job-grid">

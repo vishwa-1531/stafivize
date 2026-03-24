@@ -10,9 +10,10 @@ import {
 } from "react-icons/fa";
 
 import { auth, db } from "../firebase";
-import { doc, getDoc, collection, onSnapshot } from "firebase/firestore";
-
+import { onAuthStateChanged } from "firebase/auth";
+import {  collection, onSnapshot, query, where,getDocs } from "firebase/firestore";
 const Dashboard = () => {
+  
   const [userName, setUserName] = useState("");
   const [employees, setEmployees] = useState([]);
   const [attendance, setAttendance] = useState([]);
@@ -38,31 +39,47 @@ const Dashboard = () => {
     return today.toDateString();
   }, []);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+  const companyId = sessionStorage.getItem("companyId");
 
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
+ useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+    try {
+      const q = query(
+        collection(db, "users"),
+        where("uid", "==", user.uid)
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const data = querySnapshot.docs[0].data();
         setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
       }
-    };
+    } catch (err) {
+      console.error("Dashboard error:", err);
+    }
+  });
 
-    fetchUser();
-  }, []);
+  return () => unsubscribe();
+}, []);
 
   useEffect(() => {
-    const unsubEmployees = onSnapshot(collection(db, "employee"), (snapshot) => {
-      const data = snapshot.docs.map((item) => ({
-        id: item.id,
-        ...item.data()
-      }));
-      setEmployees(data);
-    });
+    if (!companyId) return;
+    const unsubEmployees = onSnapshot(
+  query(
+    collection(db, "employee"),
+    where("companyId", "==", companyId)
+  ),
+  (snapshot) => {
+    const data = snapshot.docs.map((item) => ({
+      id: item.id,
+      ...item.data()
+    }));
+    setEmployees(data);
+  }
+);
 
     const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
       const data = snapshot.docs.map((item) => ({
@@ -94,7 +111,7 @@ const Dashboard = () => {
       unsubLeave();
       unsubPayroll();
     };
-  }, []);
+  }, [companyId]);
 
   const todayString = useMemo(() => getTodayString(), [getTodayString]);
 

@@ -18,6 +18,7 @@ import EmployeeProfile from "./Pages/EmployeeProfile";
 import EmployeeDashboard from "./Pages/EmployeeDashboard";
 import AddEmp from "./Pages/AddEmp";
 
+
 function App() {
   return (
     <Routes>
@@ -112,6 +113,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+     
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
