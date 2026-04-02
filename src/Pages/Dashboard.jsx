@@ -41,7 +41,8 @@ const Dashboard = () => {
 
   const companyId = sessionStorage.getItem("companyId");
 
- useEffect(() => {
+
+  useEffect(() => {
   const unsubscribe = onAuthStateChanged(auth, async (user) => {
     if (!user) return;
 
@@ -55,7 +56,9 @@ const Dashboard = () => {
 
       if (!querySnapshot.empty) {
         const data = querySnapshot.docs[0].data();
-        setUserName(`${data.firstName || ""} ${data.lastName || ""}`.trim());
+        setUserName(
+          `${data.firstName || ""} ${data.lastName || ""}`.trim()
+        );
       }
     } catch (err) {
       console.error("Dashboard error:", err);
@@ -65,54 +68,76 @@ const Dashboard = () => {
   return () => unsubscribe();
 }, []);
 
-  useEffect(() => {
-    if (!companyId) return;
-    const unsubEmployees = onSnapshot(
-  query(
-    collection(db, "employee"),
-    where("companyId", "==", companyId)
-  ),
-  (snapshot) => {
-    const data = snapshot.docs.map((item) => ({
-      id: item.id,
-      ...item.data()
-    }));
-    setEmployees(data);
-  }
-);
+useEffect(() => {
+  if (!companyId) return;
 
-    const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
+  
+  const unsubEmployees = onSnapshot(
+    query(
+      collection(db, "employee"),
+      where("companyId", "==", companyId)
+    ),
+    (snapshot) => {
+      const data = snapshot.docs.map((item) => ({
+        id: item.id,
+        ...item.data()
+      }));
+      setEmployees(data);
+    }
+  );
+
+  
+  const unsubAttendance = onSnapshot(
+    query(
+      collection(db, "attendance"),
+      where("companyId", "==", companyId)
+    ),
+    (snapshot) => {
       const data = snapshot.docs.map((item) => ({
         id: item.id,
         ...item.data()
       }));
       setAttendance(data);
-    });
+    }
+  );
 
-    const unsubLeave = onSnapshot(collection(db, "leave"), (snapshot) => {
+  
+  const unsubLeave = onSnapshot(
+    query(
+      collection(db, "leave"),
+      where("companyId", "==", companyId)
+    ),
+    (snapshot) => {
       const data = snapshot.docs.map((item) => ({
         id: item.id,
         ...item.data()
       }));
       setLeave(data);
-    });
+    }
+  );
 
-    const unsubPayroll = onSnapshot(collection(db, "payroll"), (snapshot) => {
+ 
+  const unsubPayroll = onSnapshot(
+    query(
+      collection(db, "payroll"),
+      where("companyId", "==", companyId)
+    ),
+    (snapshot) => {
       const data = snapshot.docs.map((item) => ({
         id: item.id,
         ...item.data()
       }));
       setPayroll(data);
-    });
+    }
+  );
 
-    return () => {
-      unsubEmployees();
-      unsubAttendance();
-      unsubLeave();
-      unsubPayroll();
-    };
-  }, [companyId]);
-
+  return () => {
+    unsubEmployees();
+    unsubAttendance();
+    unsubLeave();
+    unsubPayroll();
+  };
+}, [companyId]);
   const todayString = useMemo(() => getTodayString(), [getTodayString]);
 
   const totalEmployees = useMemo(() => employees.length, [employees]);
@@ -400,7 +425,7 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
-
+      
           <div className="department">
             <h3>Department Distribution</h3>
 

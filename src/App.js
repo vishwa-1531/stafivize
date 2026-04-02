@@ -17,6 +17,11 @@ import Review from "./Pages/Review";
 import EmployeeProfile from "./Pages/EmployeeProfile";
 import EmployeeDashboard from "./Pages/EmployeeDashboard";
 import AddEmp from "./Pages/AddEmp";
+import EmployeeAttendance from "./Pages/EmployeeAttendance";
+import EmployeeLeaves from "./Pages/EmployeeLeaves";
+import ApplyLeave from "./Pages/ApplyLeave";
+import EmployeePayroll from "./Pages/EmployeePayroll";
+
 
 
 function App() {
@@ -104,7 +109,7 @@ function App() {
       />
       
 
-      {/* Employee route */}
+      
       <Route
         path="/EmployeeDashboard"
         element={
@@ -113,6 +118,11 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/EmployeeAttendance" element ={<EmployeeAttendance/>}/>
+      <Route path="/EmployeeLeaves" element ={<EmployeeLeaves/>}/>
+       <Route path="/ApplyLeave" element ={<ApplyLeave/>}/>
+       <Route path ="/EmployeePayroll" element ={<EmployeePayroll/>}/>
+      
      
       
       <Route path="*" element={<Navigate to="/" replace />} />

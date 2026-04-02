@@ -163,34 +163,34 @@ const SidebarEmployee = () => {
 
 
         <NavLink
-          to="/employeeattendance"
+          to="/EmployeeAttendance"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaCalendarCheck className="menu-icon" />My Attendance
         </NavLink>
 
         <NavLink
-          to="/employeeleave"
+          to="/EmployeeLeaves"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaCalendarAlt className="menu-icon" /> My Leave
         </NavLink>
 
         <NavLink
-          to="/emploeepayroll"
+          to="/EmployeePayroll"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaWallet className="menu-icon" />My Payroll
         </NavLink>
 
         <NavLink
-          to="/employeereport"
+          to="/EmployeeReport"
           className={({ isActive }) => (isActive ? "nav-item active" : "nav-item")}
         >
           <FaChartBar className="menu-icon" />My Reports
         </NavLink>
         <NavLink
-          to="/myprofile"
+          to="/Myprofile"
           className={employeeActive ? "nav-item active" : "nav-item"}
         >
           <FaUsers className="menu-icon" /> My Profile

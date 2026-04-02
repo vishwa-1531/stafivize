@@ -1,0 +1,316 @@
+/* MAIN LAYOUT */
+.employee-attendance-container {
+  flex: 1;
+  padding: 24px;
+  background: #0f172a;
+  min-height: 100vh;
+  color: #fff;
+}     
+
+/* HEADER */
+.employee-attendance-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.employee-attendance-header h2 {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.employee-attendance-header p {
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* BUTTONS */
+/* BUTTON CONTAINER */
+.employee-attendance-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* COMMON BUTTON STYLE */
+.employee-attendance-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 40px;
+  padding: 10px 20px;
+
+  border-radius: 10px;
+  border: none;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* CHECK IN BUTTON */
+.employee-checkin-btn {
+  background: #22c55e;
+  color: white;
+}
+
+/* CHECK OUT BUTTON */
+.employee-checkout-btn {
+  background: #e06a6a; 
+  color: white;
+}
+
+/* HOVER EFFECT */
+.employee-checkin-btn:hover {
+  background: #16a34a;
+}
+
+.employee-checkout-btn:hover {
+  background: #c05959;
+}
+
+/* CONTROLS */
+.employee-attendance-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+}
+
+/* VIEW SWITCH */
+.view-switch {
+  background: #1e293b;
+  padding: 6px;
+  border-radius: 12px;
+}
+
+.view-switch button {
+  border: none;
+  padding: 6px 16px;
+  margin-right: 6px;
+  border-radius: 10px;
+  background: transparent;
+  color: #cbd5f5;
+  cursor: pointer;
+}
+
+.view-switch .active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* MONTH DROPDOWN */
+.employee-month-dropdown {
+  background: #1e293b;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  color: white;
+  width: 180px;
+}
+
+/* CARD GRID */
+.employee-attendance-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+.card-top {
+  display: flex;
+  flex-direction: column; /* 🔥 THIS IS THE FIX */
+  align-items: flex-start;
+}
+
+/* CARD */
+.card-1 {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: 0.2s ease;
+  width: 100%;
+  height: 120%;
+}
+.card-2 {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: 0.2s ease;
+   width: 100%;
+  height: 120%;
+}
+.card-3 {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: 0.2s ease;
+   width: 100%;
+  height: 120%;
+}
+
+.card-4 {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  transition: 0.2s ease;
+   width: 100%;
+  height: 120%;
+}
+
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* TITLE */
+.card-1 h4 {
+  margin-top: 18px;
+  color: #cbd5f5;
+  font-size: 14px;
+  align-items: center;
+}
+.card-2 h4 {
+  margin-top: 18px;
+  color: #cbd5f5;
+  font-size: 14px;
+  align-items: center;
+}
+.card-3 h4 {
+  margin-top: 18px;
+  color: #cbd5f5;
+  font-size: 14px;
+  align-items: center;
+}
+.card-4 h4 {
+  margin-top: 18px;
+  color: #cbd5f5;
+  font-size: 14px;
+  align-items: center;
+}
+/* VALUE */
+.card-1 h2 {
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.card-2 h2 {
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.card-3 h2 {
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.card-4 h2 {
+  margin-top: 10px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* BADGE (TOP RIGHT) */
+.tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+/* COLORS */
+.tag.blue-tag {
+  color: #2563eb;
+  
+}
+
+.tag.yellow-tag {
+  color: #f59e0b;
+ 
+}
+
+.tag.red.tag {
+  color: #ef4444;
+  
+}
+
+.tag.green-tag {
+  color: #22c55e;
+  
+}
+
+
+/* TABLE */
+.employee-attendance-table {
+  margin-top: 70px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #3b82f6;
+}
+
+/* TABLE STRUCTURE */
+.employee-attendance-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* HEADER BASE */
+.employee-attendance-table thead tr {
+  background: #1e293b;
+}
+
+.employee-attendance-table th {
+  padding: 14px;
+  font-size: 13px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+/* 🔥 FULL COLOR HEADER SEGMENTS (EXACT FIGMA MATCH) */
+.employee-attendance-table th:nth-child(3) {
+  color: #13863d;
+  
+}
+
+.employee-attendance-table th:nth-child(4) {
+ color: #f59e0b;
+ 
+}
+
+.employee-attendance-table th:nth-child(5) {
+  color: #ef4444;
+  
+}
+
+/* REMOVE GAP BETWEEN COLORS */
+.employee-attendance-table th:nth-child(3),
+.employee-attendance-table th:nth-child(4),
+.employee-attendance-table th:nth-child(5) {
+  border-left: none;
+  border-right: none;
+}
+
+/* BODY */
+.employee-attendance-table td {
+  padding: 40px;
+  text-align: center;
+  background: #020617;
+}
+
+/* EMPTY STATE */
+.no-data {
+  color: #94a3b8;
+}

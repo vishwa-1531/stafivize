@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState ,useCallback} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FaCheck, FaClock, FaTimes, FaDownload, FaCalendarAlt } from "react-icons/fa";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
 import "../css/Attendance.css";
 import "../css/Sidebar.css";
@@ -11,10 +11,13 @@ import "../css/Topbar.css";
 const Attendance = () => {
   const [attendanceData, setAttendanceData] = useState([]);
   const [employeeData, setEmployeeData] = useState([]);
+  const companyId = sessionStorage.getItem("companyId");
   const [view, setView] = useState("weekly");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [departmentFilter, setDepartmentFilter] = useState("All Department");
   const [shiftFilter, setShiftFilter] = useState("All Shifts");
+
+  
 
   const months = [
     "January", "February", "March", "April", "May", "June",
@@ -22,28 +25,43 @@ const Attendance = () => {
   ];
   
 
-  useEffect(() => {
-    const unsubAttendance = onSnapshot(collection(db, "attendance"), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAttendanceData(data);
-    });
+// 🔴 ONLY CHANGE: useEffect updated
 
-    const unsubEmployee = onSnapshot(collection(db, "employee"), (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setEmployeeData(data);
-    });
+useEffect(() => {
+  if (!companyId) return; // ✅ safety
 
-    return () => {
-      unsubAttendance();
-      unsubEmployee();
-    };
-  }, []);
+  const attendanceQuery = query(
+    collection(db, "attendance"),
+    where("companyId", "==", companyId), // ✅ FILTER
+    orderBy("date", "desc")
+  );
+
+  const unsubAttendance = onSnapshot(attendanceQuery, (snapshot) => {
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setAttendanceData(data);
+  });
+
+  const employeeQuery = query(
+    collection(db, "employee"),
+    where("companyId", "==", companyId) // ✅ FILTER
+  );
+
+  const unsubEmployee = onSnapshot(employeeQuery, (snapshot) => {
+    const data = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    setEmployeeData(data);
+  });
+
+  return () => {  
+    unsubAttendance();
+    unsubEmployee();
+  };
+}, [companyId]); 
 
   const normalizeDate = (value) => {
     if (!value) return null;
@@ -54,43 +72,8 @@ const Attendance = () => {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
-const getStatus = useCallback((checkIn) => {
-  if (!checkIn) return "Absent";
-
-    let dateObj;
-
   
-  if (checkIn?.toDate) {
-    dateObj = checkIn.toDate();
-  } else if (checkIn instanceof Date) {
-    dateObj = checkIn;
-  } else if (typeof checkIn === "string") {
-    
-    const [time, modifier] = checkIn.split(" ");
-    let [hours, minutes] = time.split(":").map(Number);
 
-    if (modifier === "PM" && hours !== 12) {
-      hours += 12;
-    }
-    if (modifier === "AM" && hours === 12) {
-      hours = 0;
-    }
-
-    dateObj = new Date();
-    dateObj.setHours(hours, minutes, 0);
-  }
-
-  if (!dateObj) return "Absent";
-
-  const hour = dateObj.getHours();
-  const minute = dateObj.getMinutes();
-
-  if (hour > 9 || (hour === 9 && minute > 30)) {
-    return "Late";
-  }
-
-  return "On Time";
-}, []);
   const formatDate = (value) => {
     const date = normalizeDate(value);
     if (!date) return "-";
@@ -208,16 +191,17 @@ const getStatus = useCallback((checkIn) => {
     const employee =
       employeeMap[String(item.employeeId || "").trim()] || {};
 
-    
-   const checkIn = item.checkIn || item.chceckIn;
-  const checkOut = item.checkOut || item.chceckOut;
+    const checkIn = item.checkIn;
+    const checkOut = item.checkOut;
+
     return {
       ...item,
       checkIn,
       checkOut,
 
-      
-      status: checkIn ? getStatus(checkIn) : "Absent",
+    
+      checkInStatus: item.checkInStatus || "Absent",
+      checkoutStatus: item.checkoutStatus || "-", 
 
       name: employee.name || employee.fullName || "N/A",
       department: employee.department || "N/A",
@@ -225,7 +209,7 @@ const getStatus = useCallback((checkIn) => {
       email: employee.email || "N/A"
     };
   });
-}, [attendanceData, employeeMap, getStatus]);
+}, [attendanceData, employeeMap]);
   const departmentOptions = useMemo(() => {
     const depts = mergedAttendance
       .map((item) => item.department)
@@ -299,8 +283,8 @@ const getStatus = useCallback((checkIn) => {
       "Shift",
       "Clock In",
       "Clock Out",
-      "Break",
-      "Status"
+      "CheckOut Status",
+      "CheckIN Status"
     ];
 
     const rows = filteredAttendance.map((emp) => [
@@ -311,8 +295,8 @@ const getStatus = useCallback((checkIn) => {
       emp.shift || "",
       formatTime(emp.checkIn),
       formatTime(emp.checkOut),
-      emp.breakDuration || "",
-      emp.status || ""
+      emp.checkInStatus || "",
+      emp.checkoutStatus || ""
     ]);
 
     const csvContent =
@@ -542,8 +526,8 @@ const getStatus = useCallback((checkIn) => {
                 <th>DATE</th>
                 <th>CLOCK IN</th>
                 <th>CLOCK OUT</th>
-                <th>BREAK DURATION</th>
-                <th>STATUS</th>
+                <th>CheckIn Status</th>
+                <th>CheckOut  Status</th>
                 <th>ACTION</th>
               </tr>
             </thead>
@@ -574,32 +558,47 @@ const getStatus = useCallback((checkIn) => {
                     <td>{formatDate(item.date || item.attendanceDate || item.createdAt)}</td>
                     <td>{formatTime(item.checkIn)}</td>
                     <td>{formatTime(item.checkOut)}</td>
-                    <td>{item.breakDuration || "-"}</td>
+                   
 
                     <td>
                       <span
-                        className={`status ${
-                          item.status?.trim().toLowerCase() === "late"
+                        className={`checkInStatus ${
+                          item.checkInStatus?.trim().toLowerCase() === "late"
                             ? "late"
-                            : item.status?.trim().toLowerCase() === "absent"
+                            : item.checkInStatus?.trim().toLowerCase() === "absent"
                             ? "absent"
-                            : item.status?.trim().toLowerCase() === "on time"
+                            : item.checkInStatus?.trim().toLowerCase() === "on time"
                             ? "ontime"
                             : ""
                         }`}
                       >
-                        {item.status || "N/A"}
+                        {item.checkInStatus || "N/A"}
                       </span>
                     </td>
+                   <td>
+                <span
+                 className={`checkoutstatus ${
+                  item.checkoutStatus === "Early Leave"
+                  ? "late"
+                  : item.checkoutStatus === "Completed"
+                  ? "ontime"
+                 : item.checkoutStatus === "Overtime"
+                  ? "overtime"
+                  : ""
+                  }`}
+                 >
+                 {item.checkoutStatus || "-"}
+                 </span>
+                 </td>
 
-                    <td className="action-cell">
-  <button
-    className="action-btn"
-    onClick={() => alert(`Employee ID: ${item.employeeId}`)}
-  >
-    •••
-  </button>
-</td>
+                <td className="action-cell">
+                  <button
+                  className="action-btn"
+                  onClick={() => alert(`Employee ID: ${item.employeeId}`)}
+                  >
+                  •••
+                 </button>
+                 </td>
                   </tr>
                 ))
               )}

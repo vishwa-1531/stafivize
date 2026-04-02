@@ -10,8 +10,10 @@ import {
   onSnapshot,
   query,
   orderBy,
-  updateDoc,
-  doc
+ // updateDoc,
+  setDoc,
+  doc,
+  where // ✅ ADDED
 } from "firebase/firestore";
 import {
   FaDollarSign,
@@ -25,38 +27,36 @@ import {
 } from "react-icons/fa";
 
 const Payroll = () => {
+
   const [payrollData, setPayrollData] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
 
+  const companyId = sessionStorage.getItem("companyId"); 
   const currentYear = new Date().getFullYear();
 
   const months = useMemo(
     () => [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December"
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
     ],
     []
   );
 
   useEffect(() => {
+    if (!companyId) return; // ✅ ADDED
+
     const payrollQuery = query(
       collection(db, "payroll"),
+      where("companyId", "==", companyId), // ✅ ADDED
       orderBy("createdAt", "desc")
     );
 
-    const employeeQuery = query(collection(db, "employee"));
+    const employeeQuery = query(
+      collection(db, "employee"),
+      where("companyId", "==", companyId) 
+    );
 
     const unsubPayroll = onSnapshot(payrollQuery, (snapshot) => {
       const arr = snapshot.docs.map((docItem) => ({
@@ -78,25 +78,25 @@ const Payroll = () => {
       unsubPayroll();
       unsubEmployees();
     };
-  }, []);
+  }, [companyId]);
 
   const normalizeDate = (value) => {
     if (!value) return null;
     if (value?.toDate) return value.toDate();
-
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   };
-const formatDate = (value) => {
-  const date = normalizeDate(value);
-  if (!date) return "-";
 
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  });
-};
+  const formatDate = (value) => {
+    const date = normalizeDate(value);
+    if (!date) return "-";
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
   const getEmployeeName = (item, employee) => {
     if (item.employeeName) return item.employeeName;
     if (!employee) return "Unknown Employee";
@@ -125,8 +125,7 @@ const formatDate = (value) => {
         ) ||
         employees.find(
           (emp) =>
-            String(emp.employeeId || "").trim().toUpperCase() ===
-            payrollEmployeeId
+            String(emp.employeeId || "").trim().toUpperCase() === payrollEmployeeId
         );
 
       return {
@@ -196,14 +195,8 @@ const formatDate = (value) => {
 
   const exportPayroll = () => {
     const headers = [
-      "Employee Name",
-      "Department",
-      "Role",
-      "Base Salary",
-      "Bonus",
-      "Deduction",
-      "Net Pay",
-      "Status"
+      "Employee Name","Department","Role",
+      "Base Salary","Bonus","Deduction","Net Pay","Status"
     ];
 
     const rows = filtered.map((emp) => {
@@ -239,25 +232,43 @@ const formatDate = (value) => {
     document.body.removeChild(link);
   };
 
- const runPayroll = async () => {
+  const runPayroll = async () => {
   try {
-    const updates = filtered.map(async (emp) => {
-      if (String(emp.status).toLowerCase() !== "processed") {
-        const ref = doc(db, "payroll", emp.id);
-        await updateDoc(ref, {
-          status: "Processed",
-          paidAt: new Date()
-        });
-      }
-    });
+    const companyId = sessionStorage.getItem("companyId");
 
-    await Promise.all(updates);
-    alert("Payroll processed successfully");
+    for (const emp of employees) {
+      // 🔹 unique payroll id (month-wise)
+      const month = new Date().getMonth() + 1;
+      const year = new Date().getFullYear();
+
+      const payrollId = `${emp.employeeId}-${month}-${year}`;
+
+      await setDoc(doc(db, "payroll", payrollId), {
+        employeeId: emp.employeeId,
+      employeeName:
+  emp.name ||
+  `${emp.firstName || ""} ${emp.lastName || ""}`.trim() ||
+  "Unknown",
+        baseSalary:
+  Number(emp.basicSalary) ||
+  Number(emp.salary) ||
+  0,
+     bonus: 0,
+        deduction: 0,
+        status: "Processed",
+        companyId: companyId,
+        createdAt: new Date(),
+        paidAt: new Date(),
+        month: month,
+        year: year
+      });
+    }
+
+    alert("Payroll generated successfully!");
   } catch (error) {
     console.error(error);
   }
 };
-
   const today = new Date();
 
   let year = today.getFullYear();
@@ -282,18 +293,20 @@ const formatDate = (value) => {
       <Sidebar />
 
       <div className="payroll-container">
-         <Topbar
-  mainTitle="PAYROLL"
-  section="OVERVIEW"
-  notifications={[
-    { id: "1", text: `${payrollData.length} payroll records available` }
-  ]}
-  helpItems={[
-    "View monthly payroll records.",
-    "Check salary, bonus, and deductions.",
-    "Export payroll details when needed."
-  ]}
-/>
+        <Topbar
+          mainTitle="PAYROLL"
+          section="OVERVIEW"
+          notifications={[
+            { id: "1", text: `${payrollData.length} payroll records available` }
+          ]}
+          helpItems={[
+            "View monthly payroll records.",
+            "Check salary, bonus, and deductions.",
+            "Export payroll details when needed."
+          ]}
+        />
+
+       
         <div className="payroll-header">
           <div>
             <h1>Payroll Management</h1>

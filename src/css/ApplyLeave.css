@@ -1,0 +1,71 @@
+/* MAIN LAYOUT */
+.main-layout {
+  display: flex; /* 🔥 FIX: sidebar + content side-by-side */
+}
+
+/* MAIN */
+.apply-leave-container {
+  flex: 1; /* 🔥 take remaining space */
+  padding: 24px;
+  background: #0f172a;
+  min-height: 100vh;
+  color: #fff;
+}
+
+/* FORM */
+.leave-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+
+  margin: 20px auto; /* center horizontally */
+  max-width: 400px;
+  width: 100%;
+
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+/* INPUTS */
+.leave-form input,
+.leave-form select,
+.leave-form textarea {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+
+  background: #0f172a;
+  color: #fff;
+  font-size: 14px;
+}
+
+/* FOCUS */
+.leave-form input:focus,
+.leave-form select:focus,
+.leave-form textarea:focus {
+  border: 1px solid #3b82f6;
+}
+
+/* TEXTAREA */
+.leave-form textarea {
+  resize: none;
+  height: 90px;
+}
+
+/* BUTTON */
+.leave-form button {
+  background: #3b82f6;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s ease;
+  font-weight: 500;
+}
+
+.leave-form button:hover {
+  background: #2563eb;
+}

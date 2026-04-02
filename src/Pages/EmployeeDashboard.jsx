@@ -31,7 +31,6 @@ function EmployeeDashboard() {
 
   const getToday = () => new Date().toISOString().split("T")[0];
 
-  
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) setUser(currentUser);
@@ -39,7 +38,6 @@ function EmployeeDashboard() {
     return () => unsub();
   }, []);
 
-  
   useEffect(() => {
     if (!user) return;
 
@@ -57,7 +55,6 @@ function EmployeeDashboard() {
     return () => unsub();
   }, [user]);
 
- 
   useEffect(() => {
     if (!user) return;
 
@@ -75,7 +72,6 @@ function EmployeeDashboard() {
     return () => unsub();
   }, [user]);
 
-  
   useEffect(() => {
     if (!user) return;
 
@@ -100,7 +96,6 @@ function EmployeeDashboard() {
     return () => unsub();
   }, [user]);
 
-  
   useEffect(() => {
     if (!user) return;
 
@@ -120,74 +115,106 @@ function EmployeeDashboard() {
     return () => unsub();
   }, [user]);
 
-  
+  // ✅ CLEAN FINAL CHECK-IN LOGIC
   const handleCheckIn = async () => {
-  if (!user) return;
+    if (!user) return;
 
-  try {
-    const now = new Date();
+    try {
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
 
-    const hour = now.getHours();
-    const minute = now.getMinutes();
+      const totalMinutes = hour * 60 + minute;
 
-    const status =
-      hour > 9 || (hour === 9 && minute > 30)
-        ? "Late"
-        : "On Time";
+      const shiftStart = 10 * 60;        // 10:00
+      const graceEnd = 10 * 60 + 15;     // 10:15
 
-    // ✅ If already checked in → update status
-    if (attendance) {
-      await updateDoc(doc(db, "attendance", attendance.id), {
-        status: status
-      });
-      return;
-    }
-
-    const counterRef = doc(db, "counters", "attendance");
-
-    const newId = await runTransaction(db, async (transaction) => {
-      const counterDoc = await transaction.get(counterRef);
-
-      if (!counterDoc.exists()) {
-        transaction.set(counterRef, { count: 1 });
-        return "Attendance-001";
+      // ❌ BLOCK BEFORE 10
+      if (totalMinutes < shiftStart) {
+        alert("Punch-in allowed only after 10:00 AM");
+        return;
       }
 
-      const currentCount = counterDoc.data().count;
-      const nextCount = currentCount + 1;
+      // ✅ STATUS LOGIC (CLEAN)
+      let status = "Late";
 
-      transaction.update(counterRef, { count: nextCount });
+      if (totalMinutes <= graceEnd) {
+        status = "On Time";
+      } 
+      else if (totalMinutes <= (12 * 60 + 30)) {
+        status = "Late";
+      } 
+      else {
+        status = "Half Day";
+      }
 
-      return `Attendance-${String(nextCount).padStart(3, "0")}`;
-    });
+      // 🔥 UPDATE EXISTING RECORD
+      if (attendance) {
+        await updateDoc(doc(db, "attendance", attendance.id), {
+          checkIn: now.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+          }),
+          status: status
+        });
+        return;
+      }
 
-    await setDoc(doc(db, "attendance", newId), {
-      uid: user.uid,
-      name: employee.name || "",
-      employeeId: employee.employeeId || "",
-      date: getToday(),
+      // ✅ ID GENERATION
+      const counterRef = doc(db, "counters", "attendance");
 
-      checkIn: now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
-      }),
+      const newId = await runTransaction(db, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
 
-      status: status
-    });
+        if (!counterDoc.exists()) {
+          transaction.set(counterRef, { count: 1 });
+          return "Attendance-001";
+        }
 
-  } catch (error) {
-    console.error("Check-In Error:", error);
-  }
-};
-  
+        const currentCount = counterDoc.data().count;
+        const nextCount = currentCount + 1;
+
+        transaction.update(counterRef, { count: nextCount });
+
+        return `Attendance-${String(nextCount).padStart(3, "0")}`;
+      });
+
+      // ✅ SAVE NEW RECORD
+      await setDoc(doc(db, "attendance", newId), {
+        uid: user.uid,
+        name: employee.name || "",
+        employeeId: employee.employeeId || "",
+        companyId: employee.companyId || "",
+        date: getToday(),
+
+        checkIn: now.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        }),
+
+        status: status
+      });
+
+    } catch (error) {
+      console.error("Check-In Error:", error);
+    }
+  };
+
   const handleCheckOut = async () => {
     if (!attendance || attendance.checkOut) return;
+
+    const now = new Date();
 
     const ref = doc(db, "attendance", attendance.id);
 
     await updateDoc(ref, {
-      checkOut: new Date().toLocaleTimeString()
+      checkOut: now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      })
     });
   };
 
@@ -202,7 +229,6 @@ function EmployeeDashboard() {
           {employee.name ? `Welcome back, ${employee.name}!` : "Loading..."}
         </p>
 
-        
         <div className="employeeattendance-card">
           <div className="attendance-left">
             <h3>Today's Attendance</h3>
@@ -221,7 +247,7 @@ function EmployeeDashboard() {
               <>
                 <p className="checkin-text">
                   Checked in at {attendance.checkIn}
-                </p>
+                </p>    
 
                 {attendance?.checkOut && (
                   <p className="checkout-text">
@@ -231,7 +257,7 @@ function EmployeeDashboard() {
               </>
             )}
 
-            <p className="shift">Shift 09:00 - 18:00 (grace: 15min)</p>
+            <p className="shift">Shift 10:00 - 17:00 (grace: 15min)</p>
           </div>
 
           <div className="attendance-right">
@@ -253,7 +279,6 @@ function EmployeeDashboard() {
           </div>
         </div>
 
-       
         <div className="employeedashboard-cards">
           <div className="employeedashboard-card">
             <FaCalendarAlt className="employeedashboard-icon blue" />
@@ -286,7 +311,6 @@ function EmployeeDashboard() {
           </div>
         </div>
 
-        
         <div className="employeedashboard-recent">
           <h3>Recent Leave Requests</h3>
           <p className="empty">No leave requests yet.</p>
