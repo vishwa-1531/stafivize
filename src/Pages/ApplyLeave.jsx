@@ -8,7 +8,11 @@ import {
   getDoc,
   runTransaction,
   setDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs
 } from "firebase/firestore";
 
 function ApplyLeave() {
@@ -28,7 +32,6 @@ function ApplyLeave() {
         return;
       }
 
-      
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
 
@@ -39,25 +42,54 @@ function ApplyLeave() {
 
       const userData = userSnap.data();
 
-     
       const companyId =
         sessionStorage.getItem("companyId") ||
         userData.companyId ||
         "";
 
-     
       const fullName =
         `${userData.firstName || ""} ${userData.lastName || ""}`.trim() ||
         userData.name ||
         "Employee";
 
-      
       const empId =
         userData.employeeId && userData.employeeId !== ""
           ? userData.employeeId
           : user.uid;
 
-     
+      // 🔥 FETCH EXISTING LEAVES (for balance check)
+      const leaveQuery = query(
+        collection(db, "leave"),
+        where("uid", "==", user.uid)
+      );
+
+      const leaveSnap = await getDocs(leaveQuery);
+
+      const leaveList = leaveSnap.docs.map((doc) => doc.data());
+
+      // 🔥 CALCULATE USED LEAVES (ONLY APPROVED + CL + SL)
+      const approvedLeaves = leaveList.filter(
+        (l) => (l.status || "").toLowerCase() === "approved"
+      );
+
+      const usedLeaves = approvedLeaves.filter(
+        (l) =>
+          (l.leaveType || "").toLowerCase() === "casual leave" ||
+          (l.leaveType || "").toLowerCase() === "sick leave"
+      ).length;
+
+      const remainingLeaves = 20 - usedLeaves;
+
+      // 🚫 BLOCK CL & SL if no balance
+      if (
+        (leaveType === "Casual Leave" || leaveType === "Sick Leave") &&
+        remainingLeaves <= 0
+      ) {
+        alert("No leave balance left. Please apply for LWP.");
+        return;
+      }
+
+      // 🔥 GENERATE ID
       const counterRef = doc(db, "counters", "leaveCounter");
 
       const newLeaveId = await runTransaction(db, async (transaction) => {
@@ -76,18 +108,15 @@ function ApplyLeave() {
         return `leave-${String(next).padStart(3, "0")}`;
       });
 
-     
       const start = new Date(fromDate);
       const end = new Date(toDate);
 
       const days =
         Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
-      
+      // 🔥 SAVE LEAVE
       await setDoc(doc(db, "leave", newLeaveId), {
         uid: user.uid,
-
-      
         employeeName: fullName,
         employeeId: empId,
         companyId: companyId,
@@ -103,7 +132,6 @@ function ApplyLeave() {
 
       alert("Leave Applied ✅");
 
-      
       setLeaveType("");
       setFromDate("");
       setToDate("");
@@ -129,6 +157,7 @@ function ApplyLeave() {
             required
           >
             <option value="">Select Leave Type</option>
+            <option value="Leave with Pay">Leave With Pay</option>
             <option value="Casual Leave">Casual Leave</option>
             <option value="Sick Leave">Sick Leave</option>
           </select>

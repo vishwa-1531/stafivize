@@ -1,0 +1,201 @@
+/* ================= MAIN LAYOUT ================= */
+.myprofile-layout {
+  display: flex;
+  background: linear-gradient(180deg, #0b1220 0%, #0a0f1c 100%);
+  min-height: 100vh;
+  color: #e2e8f0;
+  font-family: "Inter", sans-serif;
+}
+
+/* ================= CONTAINER ================= */
+.myprofile-container {
+  flex: 1;
+  padding: 30px 40px;
+  max-width: 1200px;
+}
+
+/* ================= HEADER ================= */
+.myprofile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.myprofile-header h2 {
+  font-size: 26px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.myprofile-edit-btn {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4);
+  transition: 0.3s;
+}
+
+.myprofile-edit-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ================= PROFILE CARD ================= */
+.myprofile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(145deg, #1e293b, #1a2435);
+  padding: 18px 22px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03),
+              0 10px 25px rgba(0,0,0,0.4);
+}
+
+/* AVATAR */
+.avatar {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;   /* 🔥 IMPORTANT */
+  max-width: 58px;   /* 🔥 IMPORTANT */
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 18px;
+  color: #fff;
+}
+
+/* NAME BLOCK */
+.myprofile-card > div {
+  flex: 1;
+  margin-left: 15px;
+}
+
+.myprofile-card h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #f8fafc;
+}
+
+.myprofile-card p {
+  margin: 3px 0 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+/* STATUS */
+.myprofile-status {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ================= SECTION CARD ================= */
+.myprofile-section {
+  background: linear-gradient(145deg, #1e293b, #1a2435);
+  padding: 20px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03),
+              0 8px 20px rgba(0,0,0,0.4);
+}
+
+/* SECTION TITLE */
+.myprofile-section h4 {
+  margin-bottom: 15px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #cbd5f5;
+}
+
+/* ================= GRID ================= */
+/* RESET GRID */
+.grid,
+.myprofile-grid {
+  display: grid;
+  gap: 16px;
+}
+
+/* ================= PERSONAL DETAILS (FIXED) ================= */
+.myprofile-section:nth-of-type(3) .grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* Job Type full width */
+.myprofile-section:nth-of-type(3) .grid input:nth-child(5) {
+  grid-column: span 2;
+}
+
+.emp-id {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;    
+}
+
+
+
+
+/* ================= contact ================= */
+.myprofile-section:nth-of-type(4) .myprofile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.myprofile-section:nth-of-type(4) .myprofile-grid input:last-child {
+  grid-column: span 2;
+}
+
+/* ================= Next of kin  Details ================= */
+.myprofile-section:nth-of-type(5) .myprofile-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.myprofile-section:nth-of-type(5) .myprofile-grid input:last-child {
+  grid-column: span 2;
+}
+
+/* ================= Eduction ================= */
+.myprofile-section:nth-of-type(6) .myprofile-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1000px) {
+  .grid,
+  .myprofile-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid input:last-child,
+  .myprofile-grid input:last-child {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid,
+  .myprofile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .grid input:last-child,
+  .myprofile-grid input:last-child {
+    grid-column: span 1;
+  }
+}

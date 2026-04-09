@@ -21,6 +21,33 @@ const Dashboard = () => {
   const [payroll, setPayroll] = useState([]);
   const [range, setRange] = useState("7");
 
+
+   const getStatusFromTime = (time) => {
+    if (!time) return "Absent";
+
+    try {
+      const [t, modifier] = time.split(" ");
+      let [h, m] = t.split(":").map(Number);
+
+      if (modifier === "PM" && h !== 12) h += 12;
+      if (modifier === "AM" && h === 12) h = 0;
+
+      const total = h * 60 + m;
+
+      const tenAM = 10 * 60;
+      const tenFifteen = 10 * 60 + 15;
+      const twelveThirty = 12 * 60 + 30;
+
+      if (total >= tenAM && total <= tenFifteen) return "On Time";
+      if (total > tenFifteen && total <= twelveThirty) return "Late";
+      if (total > twelveThirty) return "Half Day";
+
+      return "Absent";
+    } catch {
+      return "Absent";
+    }
+  };
+
   const normalizeDate = useCallback((value) => {
     if (!value) return null;
     if (value?.toDate) return value.toDate();
@@ -34,11 +61,9 @@ const Dashboard = () => {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }, []);
 
-  const getTodayString = useCallback(() => {
-    const today = new Date();
-    return today.toDateString();
-  }, []);
-
+ const getTodayString = useCallback(() => {
+  return new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+}, []);
   const companyId = sessionStorage.getItem("companyId");
 
 
@@ -142,25 +167,33 @@ useEffect(() => {
 
   const totalEmployees = useMemo(() => employees.length, [employees]);
 
-  const todayAttendanceRecords = useMemo(() => {
-    return attendance.filter((item) => {
-      const recordDate = normalizeDate(
-        item.date || item.attendanceDate || item.createdAt
-      );
-      return recordDate ? recordDate.toDateString() === todayString : false;
-    });
-  }, [attendance, normalizeDate, todayString]);
+ const todayAttendanceRecords = useMemo(() => {
+  return attendance.filter((item) => {
+    // Case 1: If date is already string
+    if (typeof item.date === "string") {
+      const formatted = new Date(item.date).toISOString().split("T")[0];
+      return formatted === todayString;
+    }
 
+    // Case 2: If timestamp
+    const recordDate = normalizeDate(item.date || item.createdAt);
+    return recordDate
+      ? recordDate.toISOString().split("T")[0] === todayString
+      : false;
+  });
+}, [attendance, normalizeDate, todayString]);
  const presentToday = useMemo(() => {
   const presentIds = new Set();
 
   todayAttendanceRecords.forEach((item) => {
-    const status = String(item.status || item.attendanceStatus || "")
+   const status = String(
+  item.checkInStatus || getStatusFromTime(item.checkIn)
+)
       .trim()
       .toLowerCase();
 
     if (status === "on time" || status === "late" || status === "present") {
-      presentIds.add(item.employeeId || item.id);
+     presentIds.add(item.employeeId);
     }
   });
 
@@ -272,10 +305,12 @@ useEffect(() => {
         return recordDate
           ? recordDate.toDateString() === targetDate.toDateString()
           : false;
-      });
+      });      
 
      const presentCount = dayRecords.filter((item) => {
-  const status = String(item.status || item.attendanceStatus || "")
+ const status = String(
+  item.checkInStatus || getStatusFromTime(item.checkIn)
+)
     .trim()
     .toLowerCase();
 

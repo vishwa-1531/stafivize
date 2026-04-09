@@ -25,14 +25,14 @@ const Attendance = () => {
   ];
   
 
-// 🔴 ONLY CHANGE: useEffect updated
+
 
 useEffect(() => {
-  if (!companyId) return; // ✅ safety
+  if (!companyId) return; 
 
   const attendanceQuery = query(
     collection(db, "attendance"),
-    where("companyId", "==", companyId), // ✅ FILTER
+    where("companyId", "==", companyId), 
     orderBy("date", "desc")
   );
 
@@ -46,7 +46,7 @@ useEffect(() => {
 
   const employeeQuery = query(
     collection(db, "employee"),
-    where("companyId", "==", companyId) // ✅ FILTER
+    where("companyId", "==", companyId) 
   );
 
   const unsubEmployee = onSnapshot(employeeQuery, (snapshot) => {
@@ -63,15 +63,24 @@ useEffect(() => {
   };
 }, [companyId]); 
 
-  const normalizeDate = (value) => {
-    if (!value) return null;
+ const normalizeDate = (value) => {
+  if (!value) return null;
 
-    if (value?.toDate) return value.toDate();
-    if (value instanceof Date) return value;
+ 
+  if (value?.toDate) return value.toDate();
 
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  };
+  
+  if (typeof value === "string") {
+    const parts = value.split("-");
+    if (parts.length === 3) {
+      return new Date(parts[0], parts[1] - 1, parts[2]); 
+    }
+  }
+
+  if (value instanceof Date) return value;
+
+  return null;
+};
   
 
   const formatDate = (value) => {
@@ -186,6 +195,32 @@ useEffect(() => {
     return map;
   }, [employeeData]);
 
+  const getStatusFromTime = (time) => {
+  if (!time) return "Absent";
+
+  try {
+    const [t, modifier] = time.split(" ");
+    let [h, m] = t.split(":").map(Number);
+
+    if (modifier === "PM" && h !== 12) h += 12;
+    if (modifier === "AM" && h === 12) h = 0;
+
+    const total = h * 60 + m;
+
+    const tenAM = 10 * 60;
+    const tenFifteen = 10 * 60 + 15;
+    const twelveThirty = 12 * 60 + 30;
+
+    if (total >= tenAM && total <= tenFifteen) return "On Time";
+    if (total > tenFifteen && total <= twelveThirty) return "Late";
+    if (total > twelveThirty) return "Half Day";
+
+    return "Absent";
+  } catch {
+    return "Absent";
+  }
+};
+
  const mergedAttendance = useMemo(() => {
   return attendanceData.map((item) => {
     const employee =
@@ -193,14 +228,13 @@ useEffect(() => {
 
     const checkIn = item.checkIn;
     const checkOut = item.checkOut;
-
+   
     return {
       ...item,
       checkIn,
       checkOut,
 
-    
-      checkInStatus: item.checkInStatus || "Absent",
+    checkInStatus: item.checkInStatus || getStatusFromTime(item.checkIn),
       checkoutStatus: item.checkoutStatus || "-", 
 
       name: employee.name || employee.fullName || "N/A",
@@ -258,15 +292,15 @@ useEffect(() => {
   const totalEmployees = filteredAttendance.length;
 
   const onTimeCount = filteredAttendance.filter(
-    (item) => item.status?.trim().toLowerCase() === "on time"
+    (item) => item.checkInStatus?.trim().toLowerCase() === "on time"
   ).length;
 
   const lateCount = filteredAttendance.filter(
-    (item) => item.status?.trim().toLowerCase() === "late"
+    (item) => item.checkInStatus?.trim().toLowerCase() === "late"
   ).length;
 
   const absentCount = filteredAttendance.filter(
-    (item) => item.status?.trim().toLowerCase() === "absent"
+    (item) => item.checkInStatus?.trim().toLowerCase() === "absent"
   ).length;
 
   const onTimePercentage =
@@ -606,7 +640,7 @@ useEffect(() => {
           </table>
         </div>
       </div>
-    </div>
+    </div>                 
   );
 };
 

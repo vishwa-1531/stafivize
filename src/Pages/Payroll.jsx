@@ -35,6 +35,7 @@ const Payroll = () => {
 
   const companyId = sessionStorage.getItem("companyId"); 
   const currentYear = new Date().getFullYear();
+  const [leaves, setLeaves] = useState([]); 
 
   const months = useMemo(
     () => [
@@ -45,6 +46,18 @@ const Payroll = () => {
   );
 
   useEffect(() => {
+    const leaveQuery = query(
+  collection(db, "leave"),
+  where("companyId", "==", companyId)
+);
+
+const unsubLeaves = onSnapshot(leaveQuery, (snapshot) => {
+  const leaveData = snapshot.docs.map((docItem) => ({
+    id: docItem.id,
+    ...docItem.data()
+  }));
+  setLeaves(leaveData);
+});
     if (!companyId) return; // ✅ ADDED
 
     const payrollQuery = query(
@@ -77,6 +90,7 @@ const Payroll = () => {
     return () => {
       unsubPayroll();
       unsubEmployees();
+      unsubLeaves();
     };
   }, [companyId]);
 
@@ -111,7 +125,21 @@ const Payroll = () => {
     const words = String(name).trim().split(" ").filter(Boolean);
     if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
     return `${words[0][0]}${words[1][0]}`.toUpperCase();
-  };
+  }; 
+  const getLWPDays = (employeeId, selectedMonth) => {
+  return leaves
+    .filter((l) => {
+      const leaveMonth = new Date(l.fromDate).getMonth();
+
+      return (
+        String(l.employeeId) === String(employeeId) &&
+        (l.leaveType || "").toLowerCase() === "leave with pay" &&
+        (l.status || "").toLowerCase() === "approved" &&
+        leaveMonth === selectedMonth
+      );
+    })
+    .reduce((total, l) => total + (l.days || 0), 0);
+};
 
   const mergedPayroll = useMemo(() => {
     return payrollData.map((item) => {
@@ -176,14 +204,19 @@ const Payroll = () => {
     });
   }, [mergedPayroll, search, selectedMonth, months]);
 
-  const totalPayroll = filtered.reduce(
-    (sum, emp) =>
-      sum +
-      (Number(emp.baseSalary || 0) +
-        Number(emp.bonus || 0) -
-        Number(emp.deduction || 0)),
-    0
-  );
+ const totalPayroll = filtered.reduce((sum, emp) => {
+  const lwpDays = getLWPDays(emp.employeeId, selectedMonth);
+  const perDaySalary = Number(emp.baseSalary || 0) / 30;
+  const lwpDeduction = perDaySalary * lwpDays;
+
+  const net =
+    Number(emp.baseSalary || 0) +
+    Number(emp.bonus || 0) -
+    Number(emp.deduction || 0) -
+    lwpDeduction;
+
+  return sum + net;
+}, 0);
 
   const employeesPaid = filtered.filter(
     (emp) => String(emp.status).toLowerCase() === "processed"
@@ -200,11 +233,17 @@ const Payroll = () => {
     ];
 
     const rows = filtered.map((emp) => {
-      const net =
-        Number(emp.baseSalary || 0) +
-        Number(emp.bonus || 0) -
-        Number(emp.deduction || 0);
+    const lwpDays = getLWPDays(emp.employeeId, selectedMonth);
 
+const perDaySalary = Number(emp.baseSalary || 0) / 30;
+
+const lwpDeduction = perDaySalary * lwpDays;
+
+const net =
+  Number(emp.baseSalary || 0) +
+  Number(emp.bonus || 0) -
+  Number(emp.deduction || 0) -
+  lwpDeduction;
       return [
         emp.employeeName || "-",
         emp.department || "-",
@@ -443,10 +482,17 @@ const Payroll = () => {
            <tbody>
   {filtered.length > 0 ? (
     filtered.map((emp) => {
-      const net =
-        Number(emp.baseSalary || 0) +
-        Number(emp.bonus || 0) -
-        Number(emp.deduction || 0);
+    const lwpDays = getLWPDays(emp.employeeId, selectedMonth);
+
+const perDaySalary = Number(emp.baseSalary || 0) / 30;
+
+const lwpDeduction = perDaySalary * lwpDays;
+
+const net =
+  Number(emp.baseSalary || 0) +
+  Number(emp.bonus || 0) -
+  Number(emp.deduction || 0) -
+  lwpDeduction;
 
       return (
         <tr key={emp.id}>

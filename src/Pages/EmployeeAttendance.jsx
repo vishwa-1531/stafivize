@@ -27,8 +27,56 @@ function EmployeeAttendance() {
 const [currentDate, setCurrentDate] = useState(new Date());
 
   const getToday = () => new Date().toISOString().split("T")[0];
+const getStatusFromTime = (time) => {
+  if (!time) return "Absent";
 
+  try {
+    const [t, modifier] = time.split(" ");
+    let [h, m] = t.split(":").map(Number);
+
+    if (modifier === "PM" && h !== 12) h += 12;
+    if (modifier === "AM" && h === 12) h = 0;
+
+    const total = h * 60 + m;
+
+    const tenAM = 10 * 60;
+    const tenFifteen = 10 * 60 + 15;
+    const twelveThirty = 12 * 60 + 30;
+
+    if (total >= tenAM && total <= tenFifteen) return "On Time";
+    if (total > tenFifteen && total <= twelveThirty) return "Late";
+    if (total > twelveThirty) return "Half Day";
+
+    return "Absent";
+  } catch {
+    return "Absent";
+  }
+};
  
+const getCheckoutStatus = (time) => {
+  if (!time) return "-";
+
+  try {
+    const [t, modifier] = time.split(" ");
+    let [h, m] = t.split(":").map(Number);
+
+    if (modifier === "PM" && h !== 12) h += 12;
+    if (modifier === "AM" && h === 12) h = 0;
+
+    const total = h * 60 + m;
+
+    const fivePM = 17 * 60;
+    const sixPM = 18 * 60;
+
+    if (total < fivePM) return "Early Leave";
+    if (total >= fivePM && total < sixPM) return "Completed";
+    if (total >= sixPM) return "Overtime";
+
+    return "-";
+  } catch {
+    return "-";
+  }
+};
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (u) setUser(u);
@@ -40,10 +88,10 @@ const [currentDate, setCurrentDate] = useState(new Date());
   useEffect(() => {
     if (!user) return;
 
-    const q = query(
-      collection(db, "employee"),
-      where("uid", "==", user.uid)
-    );
+      const q = query(
+        collection(db, "employee"),
+        where("uid", "==", user.uid)
+      );
 
     return onSnapshot(q, (snap) => {
       if (!snap.empty) {
@@ -54,41 +102,31 @@ const [currentDate, setCurrentDate] = useState(new Date());
 
   
   useEffect(() => {
-    if (!user) return;
+  if (!user) return;
 
-    const q = query(
-      collection(db, "attendance"),
-      where("uid", "==", user.uid),
-      where("date", "==", getToday())
-    );
+  const q = query(
+    collection(db, "attendance"),
+    where("uid", "==", user.uid)
+  );
 
-    return onSnapshot(q, (snap) => {
-      if (!snap.empty) {
-        setAttendance({
-          id: snap.docs[0].id,
-          ...snap.docs[0].data()
-        });
-      } else {
-        setAttendance(null);
-      }
-    });
-  }, [user]);
+  return onSnapshot(q, (snap) => {
+    const data = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
+   
+    setAllAttendance(data);
+
+    
+    const today = getToday();
+    const todayRecord = data.find(d => d.date === today);
+
+    setAttendance(todayRecord || null);
+  });
+}, [user]);
   
-  useEffect(() => {
-    if (!user) return;
-
-    const q = query(
-      collection(db, "attendance"),
-      where("uid", "==", user.uid)
-    );
-
-    return onSnapshot(q, (snap) => {
-      const data = snap.docs.map(doc => doc.data());
-      setAllAttendance(data);
-    });
-  }, [user]);
-
+ 
   
   const handleCheckIn = async () => {
     if (!user || attendance) return;
@@ -148,8 +186,7 @@ if (totalMinutes >= tenAM && totalMinutes <= tenFifteen) {
     });
   };
 
-  
- const handleCheckOut = async () => {
+const handleCheckOut = async () => {
   if (!attendance || attendance.checkOut) return;
 
   const now = new Date();
@@ -158,27 +195,38 @@ if (totalMinutes >= tenAM && totalMinutes <= tenFifteen) {
   const minutes = now.getMinutes();
   const totalMinutes = hour * 60 + minutes;
 
-  const fivePM = 17 * 60;
-  const sixPM = 18 * 60;
+  const fourFiftyPM = 16 * 60 + 50; 
+  const fivePM = 17 * 60;           
 
   let checkoutStatus = "";
 
-  if (totalMinutes < fivePM) {
-     checkoutStatus = "Early Leave";
-  } else if (totalMinutes >= fivePM && totalMinutes < sixPM) {
-     checkoutStatus = "Completed";
-  } else {
-     checkoutStatus = "Overtime";
+  if (totalMinutes < fourFiftyPM) {
+    checkoutStatus = "Early Leave";
+  } 
+  else if (totalMinutes >= fourFiftyPM && totalMinutes <= fivePM) {
+    checkoutStatus = "Completed";
+  } 
+  else {
+    checkoutStatus = "Overtime";
   }
 
-  await updateDoc(doc(db, "attendance", attendance.id), {
+  const docId = attendance?.id;
+
+  if (!docId) {
+    alert("Attendance ID missing");
+    return;
+  }
+
+  await updateDoc(doc(db, "attendance", docId), {
     checkOut: now.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true
     }),
-     checkoutStatus:  checkoutStatus
+    checkoutStatus: checkoutStatus
   });
+
+  console.log("Updated successfully"); 
 };
   
   const daysPresent = allAttendance.filter((item) =>
@@ -355,14 +403,19 @@ if (totalMinutes >= tenAM && totalMinutes <= tenFifteen) {
                     No records found.
                   </td>
                 </tr>
-              ) : (
+              ) : (      
                 filteredAttendance.map((item, i) => (
                   <tr key={i}>
                     <td>{item.date}</td>
                     <td>{item.checkIn}</td>
                     <td>{item.checkOut || "-"}</td>
-                    <td>{item.checkInStatus}</td>
-                    <td>{item.checkoutStatus}</td>
+                    <td> {item.checkInStatus 
+                      ? item.checkInStatus 
+                      : getStatusFromTime(item.checkIn)}</td>
+                   <td> {item.checkoutStatus 
+                      ? item.checkoutStatus 
+                      : getCheckoutStatus(item.checkOut)}
+                    </td>
 
                   </tr>
                 ))

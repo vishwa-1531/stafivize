@@ -32,13 +32,13 @@ function EmployeeLeaves() {
     return () => unsub();
   }, []);
 
-  // 🔥 FETCH LEAVES (FINAL FIXED LOGIC)
+  // 🔥 FETCH LEAVES (UPDATED LOGIC)
   useEffect(() => {
     if (!user) return;
 
     const q = query(
       collection(db, "leave"),
-      where("uid", "==", user.uid) // ✅ ONLY FILTER (IMPORTANT)
+      where("uid", "==", user.uid)
     );
 
     const unsub = onSnapshot(q, (snapshot) => {
@@ -47,7 +47,7 @@ function EmployeeLeaves() {
         ...doc.data()
       }));
 
-      // ✅ SORT manually (no index error)
+      // ✅ SORT
       list.sort((a, b) => {
         const aTime = a.createdAt?.seconds || 0;
         const bTime = b.createdAt?.seconds || 0;
@@ -61,17 +61,26 @@ function EmployeeLeaves() {
         (l) => (l.status || "").toLowerCase() === "pending"
       ).length;
 
-      const approvedCount = list.filter(
+      const approvedList = list.filter(
         (l) => (l.status || "").toLowerCase() === "approved"
-      ).length;
+      );
 
       setPending(pendingCount);
-      setApproved(approvedCount);
+      setApproved(approvedList.length);
 
-      // ✅ BALANCE CALCULATION
-      setLeaveBalance(20 - approvedCount);
+      
+    const usedLeaves = approvedList
+     .filter(
+     (l) =>
+      (l.leaveType || "").toLowerCase() === "sick leave" ||
+      (l.leaveType || "").toLowerCase() === "casual leave"
+  )
+  .reduce((total, l) => total + (l.days || 0), 0);
 
-      // 🔍 DEBUG (optional)
+      const remaining = 20 - usedLeaves;
+
+      setLeaveBalance(remaining);
+
       console.log("LEAVES DATA:", list);
     });
 

@@ -2,11 +2,12 @@ import React, { useEffect,useState } from "react";
 import "../css/Login.css";
 import logo from "../image/logo.png";
 import { useNavigate, Link } from "react-router-dom";
+import { signOut } from "firebase/auth";
 import {
  
   getDocs,
   collection,
-  query,
+  query,    
   where
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
@@ -53,17 +54,26 @@ if (querySnapshot.empty) {
 }
 
 const userData = querySnapshot.docs[0].data();
-    
-    if (userData.role !== role) {
-      alert(`This account is registered as ${userData.role}`);
-      return;
-    }
+   if (userData.role !== role) {
+  alert(`This account is registered as ${userData.role}`);
+
+  
+  await signOut(auth);
+  sessionStorage.clear();
+
+
+  
+  return;
+}    
 
     
     if (userData.companyId.trim() !== companyId.trim()) {
       console.log("DB:", userData.companyId);
       console.log("Input:", companyId);
       alert("Invalid Company ID");
+       await signOut(auth);
+       
+
       return;
     }
 

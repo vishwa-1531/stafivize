@@ -33,11 +33,16 @@ const ProtectedRoute = ({ children, allowedRole }) => {
         const userData = querySnapshot.docs[0].data();
 
         
-        if (userData.role === allowedRole) {
-          setIsAllowed(true);
-        } else {
-          setIsAllowed(false);
-        }
+      const selectedRole = sessionStorage.getItem("selectedRole");
+
+if (
+  userData.role === allowedRole &&
+  selectedRole === allowedRole
+) {
+  setIsAllowed(true);
+} else {
+  setIsAllowed(false);
+}
       } catch (error) {
         console.error(error);
         setIsAllowed(false);

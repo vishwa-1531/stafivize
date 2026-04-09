@@ -21,6 +21,7 @@ import EmployeeAttendance from "./Pages/EmployeeAttendance";
 import EmployeeLeaves from "./Pages/EmployeeLeaves";
 import ApplyLeave from "./Pages/ApplyLeave";
 import EmployeePayroll from "./Pages/EmployeePayroll";
+import MyProfile from "./Pages/MyProfile";
 
 
 
@@ -118,10 +119,11 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/EmployeeAttendance" element ={<EmployeeAttendance/>}/>
-      <Route path="/EmployeeLeaves" element ={<EmployeeLeaves/>}/>
+      <Route path="/EmployeeAttendance" element ={ <ProtectedRoute allowedRole="Employee"><EmployeeAttendance/></ProtectedRoute>}/>
+      <Route path="/EmployeeLeaves" element ={<ProtectedRoute allowedRole="Employee"><EmployeeLeaves/></ProtectedRoute>}/>
        <Route path="/ApplyLeave" element ={<ApplyLeave/>}/>
-       <Route path ="/EmployeePayroll" element ={<EmployeePayroll/>}/>
+       <Route path ="/EmployeePayroll" element ={<ProtectedRoute allowedRole="Employee"><EmployeePayroll/></ProtectedRoute>}/>
+       <Route path ="/MyProfile" element ={<ProtectedRoute allowedRole="Employee"><MyProfile/></ProtectedRoute>}/>
       
      
       
